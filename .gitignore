@@ -1,0 +1,12 @@
+# LaTeX build products
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.ptc
+*.synctex.gz
+*.toc
+/main.pdf

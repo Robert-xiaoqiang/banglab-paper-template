@@ -1,14 +1,233 @@
-\documentclass{article}
-\usepackage{graphicx} % Required for inserting images
+% !TeX program = pdflatex
+\ifdefined\pdfoutput\pdfoutput=1\fi % arXiv builds with pdfLaTeX when it sees this line
+\documentclass[titlestyle=card]{udemmila}   % titlestyle = card | band | rule
 
-\title{UdeM-Mila-LLMPaperTemplare}
-\author{robertxiaoqiang }
-\date{September 2026}
+% The class already loads graphicx, booktabs, amsmath, amssymb, xcolor
+% (with the table option), tcolorbox, hyperref, cleveref and natbib.
+\usepackage{multirow}
+
+% Front matter %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{Title of Your Paper in Two Lines at Most:\\ A Subtitle That Names the Method}
+\runningtitle{Short Title for the Running Head}
+\reportlabel{Technical Report}
+
+\author[1,2,*]{First Author}
+\author[1,2,*]{Second Author}
+\author[1,3]{Third Author}
+\author[1,2,\dagger]{Senior Author}
+
+\affiliation[1]{Mila -- Quebec AI Institute}
+\affiliation[2]{Universit\'e de Montr\'eal}
+\affiliation[3]{McGill University}
+\contribution[*]{Equal contribution}
+\contribution[\dagger]{Corresponding author}
+
+\abstract{This template typesets arXiv preprints for authors at Universit\'e de
+Montr\'eal and Mila. It keeps what works in the industry preprint styles of Meta
+FAIR, ByteDance Seed, ServiceNow and LeapLab, a front matter that reads as one
+block, sans-serif headings over a serif body, and metadata a reader can click,
+and sets them in Mila purple and UdeM blue. A single class option chooses among
+three title pages. The author, affiliation and metadata commands follow the Meta
+FAIR convention, so a paper written for the Meta FAIR, ServiceNow or ByteDance
+Seed class moves here by changing its \texttt{\textbackslash documentclass}
+line. Replace this paragraph with your abstract and keep it to one paragraph of
+about 150 to 250 words.}
+
+\date{\today}
+\correspondence{\email{first.author@mila.quebec}, \email{senior.author@umontreal.ca}}
+\github{\url{https://github.com/your-org/your-repo}}
+\huggingface{\url{https://huggingface.co/your-org}}
 
 \begin{document}
 
 \maketitle
 
 \section{Introduction}
+\label{sec:intro}
+
+Industry labs publish their arXiv preprints in house styles that make a paper
+recognisable before its title is read. Meta FAIR sets the whole front matter in
+a tinted card \citep{hao2024coconut}, ByteDance Seed rules off a centred title
+under a logo header \citep{sheng2026rlcer}, ServiceNow frames the card in its
+brand green and adds link lines for code and models \citep{wang2026mempi}, and
+LeapLab puts the abstract on a grey panel below a logo and date
+\citep{yue2025limit}. This class brings those choices to Universit\'e de
+Montr\'eal and Mila, with the official UdeM and Mila marks and colours.
+
+The body text is Latin Modern, so mathematics such as the attention operator of
+\citet{vaswani2017attention},
+\begin{equation}
+  \operatorname{Attention}(Q, K, V) = \operatorname{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right) V,
+  \label{eq:attention}
+\end{equation}
+matches the surrounding text. Everything that carries the brand, the title
+block, headings, caption labels and the running head, is set in Inter, the
+closest free match to Mila's own typeface. \Cref{fig:overview} is where the
+overview figure of a paper would go, and \cref{sec:usage} explains the class
+options and the front matter commands.
+
+\begin{figure*}[t]
+  \centering
+  \begin{tikzpicture}[
+      font=\sffamily\small,
+      stage/.style={rounded corners=5pt, minimum height=1.25cm, minimum width=3.3cm,
+        align=center, draw=milapurple!55, line width=0.6pt, fill=umtint},
+      core/.style={stage, fill=milapurple, draw=milapurple, text=white},
+      flow/.style={-latex, line width=0.8pt, draw=milapurple!70}]
+    \node[stage] (in)  at (0,0)   {\textbf{Input}\\[1pt]\footnotesize task and context};
+    \node[core]  (m)   at (4.6,0) {\textbf{Your method}\\[1pt]\footnotesize the component that is new};
+    \node[stage] (out) at (9.2,0) {\textbf{Output}\\[1pt]\footnotesize answer and trace};
+    \node[stage, draw=udemblue!60, fill=udemblue!7, minimum width=4.2cm]
+      (fb) at (4.6,-1.85) {\textbf{Feedback}\\[1pt]\footnotesize reward, critique or memory};
+    \draw[flow] (in) -- (m);
+    \draw[flow] (m) -- (out);
+    \draw[flow, draw=udemblue!70] (out.south) |- (fb.east);
+    \draw[flow, draw=udemblue!70] (fb.north) -- (m.south);
+  \end{tikzpicture}
+  \caption{Overview figure placeholder. The method node is filled in Mila purple
+  and the feedback path is drawn in UdeM blue, the two brand colours this class
+  defines as \texttt{milapurple} and \texttt{udemblue}.}
+  \label{fig:overview}
+\end{figure*}
+
+\section{Using the class}
+\label{sec:usage}
+
+\subsection{Class options}
+
+The class builds on \texttt{article}, so every \texttt{article} option such as
+\texttt{11pt} or \texttt{twocolumn} passes through unchanged. \Cref{tab:options}
+lists the two options the class adds. The title style is the only choice that
+changes how the paper looks at a glance. The \texttt{card} style follows Meta
+FAIR and ServiceNow, \texttt{band} puts a full-width purple band with white
+logos across the top of the first page, and \texttt{rule} follows ByteDance Seed
+and LeapLab with colour logos in the header and a ruled, centred title.
+
+\begin{table*}[t]
+  \centering
+  \caption{Options added by \texttt{udemmila.cls}. Any other option is passed to
+  \texttt{article}.}
+  \label{tab:options}
+  \small
+  \begin{tabular}{@{}lll@{}}
+    \toprule
+    \textbf{Option} & \textbf{Values} & \textbf{Effect} \\
+    \midrule
+    \texttt{titlestyle} & \texttt{card} (default), \texttt{band}, \texttt{rule} & Layout of the first page \\
+    \texttt{numbers}    & flag & Numeric citations [1] instead of (Author, Year) \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
+
+\subsection{Front matter}
+
+The front matter is declared in the preamble and printed by
+\texttt{\textbackslash maketitle}. \Cref{tab:frontmatter} lists the commands.
+Authors take their affiliation marks as an optional argument, and the abstract
+is a command rather than an environment, both as in the Meta FAIR class. Every
+metadata line is optional, and \texttt{\textbackslash metadata} adds a line of
+any other kind with a Font Awesome icon.
+
+\begin{table*}[t]
+  \centering
+  \caption{Front matter commands, all used in the preamble.}
+  \label{tab:frontmatter}
+  \small
+  \begin{tabular}{@{}ll@{}}
+    \toprule
+    \textbf{Command} & \textbf{Prints} \\
+    \midrule
+    \verb|\title{...}|                      & Title, with \verb|\\| for a line break \\
+    \verb|\author[1,2,*]{Name}|             & Author with affiliation and contribution marks \\
+    \verb|\affiliation[1]{Mila}|            & Affiliation for mark 1 \\
+    \verb|\contribution[*]{Equal contribution}| & Note for mark $*$ \\
+    \verb|\abstract{...}|                   & Abstract \\
+    \verb|\date|, \verb|\correspondence|, \verb|\github|, \verb|\huggingface|, \verb|\projectpage| & Metadata line with its icon \\
+    \verb|\metadata[Key][\faBook]{Value}|   & Any other metadata line \\
+    \verb|\runningtitle{...}|               & Header text on every page after the first \\
+    \verb|\reportlabel{...}|                & Small label on the title page, Preprint by default \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
+
+\section{Figures, tables and boxes}
+\label{sec:floats}
+
+Captions open with a purple label in Inter. A caption that fits on one line is
+centred, and a longer one is justified. Table captions sit above the table.
+\Cref{tab:results} shows the recommended results layout, with booktabs rules, the
+best entry in bold, the runner-up underlined and the proposed method on a row
+tinted with \texttt{umtint}.
+
+\begin{table*}[t]
+  \centering
+  \caption{Example results table. All numbers are placeholders.}
+  \label{tab:results}
+  \small
+  \begin{tabular}{@{}lccccc@{}}
+    \toprule
+    \textbf{Method} & \textbf{Bench-A} & \textbf{Bench-B} & \textbf{Bench-C} & \textbf{Bench-D} & \textbf{Avg.} \\
+    \midrule
+    Base model            & 41.2 & 55.0 & 30.4 & 62.1 & 47.2 \\
+    Prompting baseline    & 44.8 & 57.3 & 33.9 & 63.0 & 49.8 \\
+    Published method      & \underline{49.5} & \underline{60.2} & \underline{37.1} & \underline{66.4} & \underline{53.3} \\
+    \rowcolor{umtint}
+    Ours                  & \textbf{53.1} & \textbf{63.7} & \textbf{41.8} & \textbf{68.0} & \textbf{56.7} \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
+
+Two boxes cover the content arXiv papers in this area most often set apart.
+The \texttt{takeaway} box states a finding the reader should keep, and the
+\texttt{promptbox} holds a prompt or a model output in Inconsolata, with
+verbatim content allowed inside.
+
+\begin{takeaway}[Takeaway]
+State the finding in one or two sentences with the number that supports it, for
+example that the method improves the average score by 3.4 points over the
+strongest published baseline in \cref{tab:results}.
+\end{takeaway}
+
+\begin{promptbox}[Prompt template for the judge model]
+You are grading a response to the task below.\\
+Task: \{task\}\\
+Response: \{response\}\\
+Reply with a score from 1 to 10 and one sentence of justification.
+\end{promptbox}
+
+\section{Conclusion}
+
+Replace this sample text with your paper. The appendix below starts with
+\texttt{\textbackslash beginappendix}, which opens a new page, prints the
+appendix heading and lists the appendix sections, and
+\texttt{\textbackslash beginappendix*} leaves the list out.
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\beginappendix
+
+\section{Porting a paper from another template}
+\label{app:porting}
+
+A paper written for the Meta FAIR, ServiceNow or ByteDance Seed class compiles
+here after its \texttt{\textbackslash documentclass} line changes to
+\texttt{udemmila}. The commands those classes define, including
+\texttt{\textbackslash checkdata}, \texttt{\textbackslash morelinks},
+\texttt{\textbackslash beginappendix} and \texttt{\textbackslash nm}, keep their
+meaning, and asset paths such as their logo files are no longer needed. Author
+marks may be written as text or as maths symbols, since
+\texttt{\textbackslash dagger} and \texttt{\textbackslash ddagger} are mapped to
+their text forms inside the marks.
+
+\section{Brand assets}
+\label{app:brand}
+
+The logos in \texttt{assets/} are vector PDFs converted from the SVG files
+served by \url{https://mila.quebec}. The Mila wordmark keeps its own purple,
+\texttt{\#662E7D}, and the UdeM signature is set in UdeM blue,
+\texttt{\#0057AC}, the colour \url{https://www.umontreal.ca} uses. White versions
+of both are used on the purple band.
 
 \end{document}
