@@ -9,6 +9,7 @@
 % \documentclass.
 %
 %   \documentclass[titlestyle=card]{udemmila}   % card | band | rule
+%                                              % labcard | labband | masthead
 %   \documentclass[numbers]{udemmila}           % [1] citations instead of (Author, Year)
 %   \documentclass[twocolumn]{udemmila}         % any article option passes through
 
@@ -31,6 +32,14 @@
   columnsep=0.65cm, headheight=14pt, headsep=0.7cm, footskip=1.1cm]{geometry}
 \RequirePackage{etoolbox}
 \RequirePackage{parskip}
+
+% The lab styles (labcard, labband, masthead) carry the lab wordmark and use no
+% coloured edge bars anywhere, including the takeaway box. card, band and rule
+% keep their original look.
+\newif\ifUM@labstyle
+\ifdefstring\UM@titlestyle{labcard}{\UM@labstyletrue}{}
+\ifdefstring\UM@titlestyle{labband}{\UM@labstyletrue}{}
+\ifdefstring\UM@titlestyle{masthead}{\UM@labstyletrue}{}
 % Room for long \texttt identifiers before a line is left overfull.
 \setlength\emergencystretch{1.5em}
 
@@ -180,10 +189,11 @@
 \NewDocumentCommand\metadata{O{} O{\faAngleRight} m}{%
   \UM@additem\UM@metadata{\UM@metasep}{\UM@metaitem{#2}{#1}{#3}}}
 \newcommand\UM@metaitem[3]{% icon, key, value; wrapped lines hang under the key
-  \hangindent=1.25em\hangafter=1\relax
+  \UM@metahang
   \mbox{\makebox[1.25em][l]{\color{milapurple}#1}%
   \ifblank{#2}{}{{\bfseries\color{umink}#2:}\ }}{\color{umgrey}#3}}
 \newcommand\UM@metasep{\par}
+\newcommand\UM@metahang{\hangindent=1.25em\hangafter=1\relax}
 
 \newcommand\email[1]{\href{mailto:#1}{\texttt{#1}}}
 \renewcommand\date[1]{\metadata[Date][\faCalendar*]{#1}}
@@ -200,6 +210,21 @@
 \newcommand\morelinks[1]{\metadata[More links][\faLink]{#1}}
 \providecommand\nm[1]{#1}
 
+% Lab identity %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% The lab wordmark is set in type, the first part in semibold and the second
+% in regular weight: \lab{Bang}{Lab}. \labdescriptor is the small line that
+% goes with it, and \labname prints the wordmark in running text.
+\newcommand\UM@labfirst{Bang}
+\newcommand\UM@labsecond{Lab}
+\newcommand\lab[2]{\renewcommand\UM@labfirst{#1}\renewcommand\UM@labsecond{#2}}
+\newcommand\UM@labdescriptor{Universit\'e de Montr\'eal \textperiodcentered{} Mila}
+\newcommand\labdescriptor[1]{\renewcommand\UM@labdescriptor{#1}}
+% #1 = colour of the first part, #2 = colour of the second part.
+\newcommand\UM@wordmark[2]{{\sffamily\mbox{{\bfseries\color{#1}\UM@labfirst}%
+  {\mdseries\color{#2}\UM@labsecond}}}}
+\newcommand\labname{\UM@wordmark{umink}{milapurple}}
+
 % Title-block pieces %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \newcommand\UM@nohyphens{\hyphenpenalty=10000\exhyphenpenalty=10000\relax}
@@ -215,6 +240,11 @@
 \newcommand\UM@printabstract{{\normalsize\color{umink!90}\UM@abstract\par}}
 \newcommand\UM@printmetadata{\ifdefempty\UM@metadata{}{{\sffamily
   \fontsize{8.5}{12.5}\selectfont\UM@metadata\par}}}
+% The same items flowing along a line instead of one per line.
+\newcommand\UM@printmetadatainline{\ifdefempty\UM@metadata{}{{\sffamily
+  \fontsize{8.5}{14}\selectfont\raggedright
+  \def\UM@metasep{\hspace{1.8em plus 0.8em}\allowbreak}\let\UM@metahang\relax
+  \UM@metadata\par}}}
 
 % Letter-spaced capitals for the report label.
 \newcommand\UM@spaced[1]{\textls[110]{\MakeUppercase{#1}}}
@@ -335,6 +365,101 @@
     \ifdefempty\UM@metadata{}{\vspace{3.5mm}\UM@printmetadata}%
   \end{tcolorbox}}
 
+% Title style: labcard %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% The card without its coloured edge. The lab wordmark and report label open
+% the card, and the logos sit beside the metadata as in card.
+\newcommand\UM@labline{%
+  {\fontsize{11}{13}\selectfont\UM@wordmark{umink}{milapurple}}%
+  \ifdefempty\UM@reportlabel{}{\hspace{0.7em}%
+    {\color{umrule}\rule[-0.2em]{0.5pt}{1.05em}}\hspace{0.7em}%
+    {\sffamily\bfseries\scriptsize\color{umgrey}\UM@spaced{\UM@reportlabel}}}\par}
+\newcommand\UM@maketitle@labcard{%
+  \sbox\UM@lockupbox{\UM@lockup{7.2mm}{}{umrule}}%
+  \begin{tcolorbox}[enhanced, frame hidden, arc=9pt, boxrule=0pt, colback=umtint,
+      left=0.75cm, right=0.75cm, top=0.6cm, bottom=0.6cm,
+      before skip=0pt, after skip=0pt]
+    {\raggedright
+      \UM@labline
+      \vspace{4mm}\UM@printtitle
+      \vspace{3.5mm}\UM@printauthors
+      \vspace{1.4mm}\UM@printaffiliations
+      \ifdefempty\UM@contributions{}{\vspace{0.8mm}\UM@printcontributions}\par}%
+    \vspace{5mm}%
+    \UM@printabstract
+    \vspace{5mm}%
+    \begin{minipage}[b]{\dimexpr\linewidth-\wd\UM@lockupbox-0.6cm\relax}
+      \UM@printmetadata
+    \end{minipage}\hfill\usebox\UM@lockupbox
+  \end{tcolorbox}}
+
+% Title style: labband %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% A solid purple band with the lab wordmark in white on the left and the white
+% UdeM and Mila logos on the right. The abstract and metadata share one tinted
+% panel on the page below.
+\newcommand\UM@labbandbg{%
+  \AddToShipoutPictureBG*{\AtPageUpperLeft{%
+    \raisebox{-\UM@bandheight}{\begin{tikzpicture}[inner sep=0pt]
+      \fill[milapurple] (0,0) rectangle (\paperwidth,\UM@bandheight);
+      \node[anchor=west, align=left] at (2.5cm,0.5\UM@bandheight)
+        {{\fontsize{21}{22}\selectfont\UM@wordmark{white}{white!72!milapurple}}\\[2.2mm]
+         {\sffamily\bfseries\tiny\color{white!78!milapurple}\UM@spaced{\UM@labdescriptor}}};
+      \node[anchor=east] at ([xshift=-2.5cm]\paperwidth,0.5\UM@bandheight)
+        {\UM@lockup{8mm}{-white}{white!45!milapurple}};
+    \end{tikzpicture}}}}}
+\newcommand\UM@maketitle@labband{%
+  \UM@labbandbg
+  \vspace*{0.45cm}%
+  {\raggedright
+    \ifdefempty\UM@reportlabel{}{{\sffamily\bfseries\scriptsize\color{milapurple}%
+      \UM@spaced{\UM@reportlabel}\par}\vspace{2.6mm}}%
+    \UM@printtitle
+    \vspace{4mm}\UM@printauthors
+    \vspace{1.4mm}\UM@printaffiliations
+    \ifdefempty\UM@contributions{}{\vspace{0.8mm}\UM@printcontributions}\par}%
+  \vspace{5.5mm}%
+  \begin{tcolorbox}[enhanced, frame hidden, arc=7pt, boxrule=0pt, colback=umtint,
+      left=0.65cm, right=0.65cm, top=0.5cm, bottom=0.45cm,
+      before skip=0pt, after skip=0pt]
+    {\sffamily\bfseries\small\color{milapurple}Abstract\par}\vspace{1.6mm}%
+    \UM@printabstract
+    \ifdefempty\UM@metadata{}{\vspace{3.5mm}{\color{umrule}\hrule height 0.4pt}%
+      \vspace{2.6mm}\UM@printmetadatainline}%
+  \end{tcolorbox}%
+  \vspace{2mm}}
+
+% Title style: masthead %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% An editorial first page with no boxes. A masthead carries the lab wordmark
+% and descriptor on the left and the colour logos on the right above a
+% hairline, and the abstract is set as text under a spaced-capitals label.
+\newcommand\UM@maketitle@masthead{%
+  \vspace*{-0.35cm}%
+  \noindent
+  \begin{minipage}[b]{0.5\linewidth}
+    {\fontsize{25}{26}\selectfont\UM@wordmark{umink}{milapurple}}\par\vspace{1.6mm}%
+    {\sffamily\bfseries\tiny\color{umgrey}\UM@spaced{\UM@labdescriptor}}%
+  \end{minipage}\hfill
+  \UM@lockup{7.2mm}{}{umrule}\par
+  \vspace{3.2mm}{\color{umink}\hrule height 0.8pt}\vspace{0.9pt}%
+  {\color{umink}\hrule height 0.3pt}%
+  \vspace{7mm}%
+  {\raggedright
+    \ifdefempty\UM@reportlabel{}{{\sffamily\bfseries\scriptsize\color{milapurple}%
+      \UM@spaced{\UM@reportlabel}\par}\vspace{2.6mm}}%
+    {\UM@nohyphens\sffamily\bfseries\fontsize{23}{28}\selectfont\color{umink}%
+      \UM@title\par}%
+    \vspace{4.5mm}\UM@printauthors
+    \vspace{1.4mm}\UM@printaffiliations
+    \ifdefempty\UM@contributions{}{\vspace{0.8mm}\UM@printcontributions}\par}%
+  \vspace{7mm}%
+  {\sffamily\bfseries\scriptsize\color{milapurple}\UM@spaced{Abstract}\par}%
+  \vspace{2mm}%
+  {\fontsize{10.5}{14.2}\selectfont\color{umink!90}\UM@abstract\par}%
+  \ifdefempty\UM@metadata{}{\vspace{4mm}\UM@printmetadatainline}%
+  \vspace{4mm}{\color{umrule}\hrule height 0.4pt}\vspace{1mm}}
+
 % \maketitle %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \newcommand\UM@maketitle{%
@@ -343,7 +468,7 @@
     \csname UM@maketitle@\UM@titlestyle\endcsname
   \else
     \ClassError{udemmila}{Unknown titlestyle `\UM@titlestyle'}%
-      {Use titlestyle=card, band or rule.}%
+      {Use titlestyle=card, band, rule, labcard, labband or masthead.}%
   \fi}
 \renewcommand\maketitle{%
   \thispagestyle{UMfirst}%
@@ -362,13 +487,20 @@
 % Headers and footers %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \RequirePackage{fancyhdr}
+\ifUM@labstyle
+  \newcommand\UM@runninghead{{\fontsize{7.5}{9}\selectfont\UM@wordmark{umink}{milapurple}}%
+    \ifdefempty\UM@runningtitle{}{\hspace{0.8em}{\sffamily\scriptsize\color{umgrey}%
+      \UM@runningtitle}}}
+\else
+  \newcommand\UM@runninghead{\sffamily\scriptsize\color{umgrey}\UM@runningtitle}
+\fi
 \newcommand\UM@pagenumber{{\sffamily\footnotesize\color{umgrey}\thepage}}
 \fancypagestyle{UMfirst}{%
   \fancyhf{}\renewcommand\headrulewidth{0pt}%
   \fancyfoot[C]{\UM@pagenumber}}
 \fancypagestyle{UMrunning}{%
   \fancyhf{}%
-  \fancyhead[L]{\sffamily\scriptsize\color{umgrey}\UM@runningtitle}%
+  \fancyhead[L]{\UM@runninghead}%
   \fancyhead[R]{\raisebox{-0.5pt}{\UM@marksonly{3mm}}}%
   \renewcommand\headrulewidth{0.4pt}%
   \renewcommand\headrule{{\color{umrule}\hrule\@height\headrulewidth
@@ -395,10 +527,18 @@
 % Boxes %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % \begin{takeaway}[Title] ... \end{takeaway}: a finding the reader should keep.
-\newtcolorbox{takeaway}[1][Takeaway]{enhanced, breakable, arc=4pt,
-  boxrule=0pt, leftrule=3pt, colframe=milapurple, colback=umtint,
-  left=9pt, right=10pt, top=6pt, bottom=6pt, before skip=8pt, after skip=8pt,
-  before upper={{\sffamily\bfseries\small\color{milapurple}#1\par}\vspace{2pt}}}
+% The lab styles draw it as a plain tinted panel, the others with a left rule.
+\ifUM@labstyle
+  \newtcolorbox{takeaway}[1][Takeaway]{enhanced, breakable, arc=5pt,
+    frame hidden, boxrule=0pt, colback=umtint,
+    left=11pt, right=11pt, top=7pt, bottom=7pt, before skip=8pt, after skip=8pt,
+    before upper={{\sffamily\bfseries\small\color{milapurple}#1\par}\vspace{2pt}}}
+\else
+  \newtcolorbox{takeaway}[1][Takeaway]{enhanced, breakable, arc=4pt,
+    boxrule=0pt, leftrule=3pt, colframe=milapurple, colback=umtint,
+    left=9pt, right=10pt, top=6pt, bottom=6pt, before skip=8pt, after skip=8pt,
+    before upper={{\sffamily\bfseries\small\color{milapurple}#1\par}\vspace{2pt}}}
+\fi
 
 % \begin{promptbox}[Title] ... \end{promptbox}: a prompt or model output,
 % set in Inconsolata; verbatim content is allowed inside.

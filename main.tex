@@ -1,6 +1,8 @@
 % !TeX program = pdflatex
 \ifdefined\pdfoutput\pdfoutput=1\fi % arXiv builds with pdfLaTeX when it sees this line
-\documentclass[titlestyle=card]{udemmila}   % titlestyle = card | band | rule
+\documentclass[titlestyle=card]{udemmila}
+% titlestyle = card | band | rule          (UdeM and Mila logos)
+%            | labcard | labband | masthead (plus the lab wordmark, no edge bars)
 
 % The class already loads graphicx, booktabs, amsmath, amssymb, xcolor
 % (with the table option), tcolorbox, hyperref, cleveref and natbib.
@@ -11,15 +13,17 @@
 \title{Title of Your Paper in Two Lines at Most:\\ A Subtitle That Names the Method}
 \runningtitle{Short Title for the Running Head}
 \reportlabel{Technical Report}
+\lab{Bang}{Lab}                                        % wordmark, used by the lab styles
+\labdescriptor{Universit\'e de Montr\'eal \textperiodcentered{} Mila}
 
 \author[1,2,*]{First Author}
 \author[1,2,*]{Second Author}
 \author[1,3]{Third Author}
-\author[1,2,\dagger]{Senior Author}
+\author[1,2,3,\dagger]{Senior Author}
 
 \affiliation[1]{Mila -- Quebec AI Institute}
 \affiliation[2]{Universit\'e de Montr\'eal}
-\affiliation[3]{McGill University}
+\affiliation[3]{Canada CIFAR AI Chair}
 \contribution[*]{Equal contribution}
 \contribution[\dagger]{Corresponding author}
 
@@ -27,8 +31,8 @@
 Montr\'eal and Mila. It keeps what works in the industry preprint styles of Meta
 FAIR, ByteDance Seed, ServiceNow and LeapLab, a front matter that reads as one
 block, sans-serif headings over a serif body, and metadata a reader can click,
-and sets them in Mila purple and UdeM blue. A single class option chooses among
-three title pages. The author, affiliation and metadata commands follow the Meta
+and sets them in Mila purple and UdeM blue with the BangLab wordmark. A single
+class option chooses the title page. The author, affiliation and metadata commands follow the Meta
 FAIR convention, so a paper written for the Meta FAIR, ServiceNow or ByteDance
 Seed class moves here by changing its \texttt{\textbackslash documentclass}
 line. Replace this paragraph with your abstract and keep it to one paragraph of
@@ -102,7 +106,12 @@ lists the two options the class adds. The title style is the only choice that
 changes how the paper looks at a glance. The \texttt{card} style follows Meta
 FAIR and ServiceNow, \texttt{band} puts a full-width purple band with white
 logos across the top of the first page, and \texttt{rule} follows ByteDance Seed
-and LeapLab with colour logos in the header and a ruled, centred title.
+and LeapLab with colour logos in the header and a ruled, centred title. The
+three lab styles add the \labname{} wordmark and draw no coloured edge bars.
+\texttt{labcard} is the card with the wordmark in place of its edge,
+\texttt{labband} sets the wordmark in white on a solid purple band, and
+\texttt{masthead} opens the page with the wordmark and logos above a double
+rule and sets the abstract as plain text.
 
 \begin{table*}[t]
   \centering
@@ -115,6 +124,7 @@ and LeapLab with colour logos in the header and a ruled, centred title.
     \textbf{Option} & \textbf{Values} & \textbf{Effect} \\
     \midrule
     \texttt{titlestyle} & \texttt{card} (default), \texttt{band}, \texttt{rule} & Layout of the first page \\
+                        & \texttt{labcard}, \texttt{labband}, \texttt{masthead} & The same with the lab wordmark \\
     \texttt{numbers}    & flag & Numeric citations [1] instead of (Author, Year) \\
     \bottomrule
   \end{tabular}
@@ -147,6 +157,7 @@ any other kind with a Font Awesome icon.
     \verb|\metadata[Key][\faBook]{Value}|   & Any other metadata line \\
     \verb|\runningtitle{...}|               & Header text on every page after the first \\
     \verb|\reportlabel{...}|                & Small label on the title page, Preprint by default \\
+    \verb|\lab{Bang}{Lab}|, \verb|\labdescriptor{...}| & Lab wordmark and the line under it (lab styles) \\
     \bottomrule
   \end{tabular}
 \end{table*}
