@@ -10,6 +10,9 @@
 %
 %   \documentclass[titlestyle=card]{udemmila}   % card | band | rule
 %                                              % labcard | labband | masthead
+%                                              % cover | hero | teaser | split | swiss
+%                                              % highlights | letterhead | bilingual
+%                                              % motif | minimal
 %   \documentclass[numbers]{udemmila}           % [1] citations instead of (Author, Year)
 %   \documentclass[twocolumn]{udemmila}         % any article option passes through
 
@@ -33,13 +36,14 @@
 \RequirePackage{etoolbox}
 \RequirePackage{parskip}
 
-% The lab styles (labcard, labband, masthead) carry the lab wordmark and use no
-% coloured edge bars anywhere, including the takeaway box. card, band and rule
-% keep their original look.
+% Every style except the first three (card, band, rule) is a lab style: it
+% carries the lab wordmark and uses no coloured edge bars anywhere, including
+% the takeaway box. card, band and rule keep their original look.
 \newif\ifUM@labstyle
-\ifdefstring\UM@titlestyle{labcard}{\UM@labstyletrue}{}
-\ifdefstring\UM@titlestyle{labband}{\UM@labstyletrue}{}
-\ifdefstring\UM@titlestyle{masthead}{\UM@labstyletrue}{}
+\UM@labstyletrue
+\ifdefstring\UM@titlestyle{card}{\UM@labstylefalse}{}
+\ifdefstring\UM@titlestyle{band}{\UM@labstylefalse}{}
+\ifdefstring\UM@titlestyle{rule}{\UM@labstylefalse}{}
 % Room for long \texttt identifiers before a line is left overfull.
 \setlength\emergencystretch{1.5em}
 
@@ -71,6 +75,11 @@
 \definecolor{umgrey}{HTML}{5F5A66}      % affiliations, metadata, running head
 \colorlet{umtint}{milapurple!6}         % title card and box background
 \colorlet{umrule}{milapurple!30}        % hairlines
+\definecolor{umnight}{HTML}{2E1A3B}     % deep ground of the hero style
+% A two-series chart pair from the same two hues, checked for lightness,
+% chroma and colour-blind separation: the method in purple, a baseline in blue.
+\definecolor{chartpurple}{HTML}{7E3F97}
+\definecolor{chartblue}{HTML}{5B8FD3}
 
 % Graphics, tables, maths %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -157,7 +166,8 @@
 
 % Author marks accept either text or maths symbols: \dagger is mapped to
 % \textdagger so marks stay in Inter instead of switching to the maths font.
-\newcommand\UM@marks[1]{{\sffamily\mdseries\let\dagger\textdagger
+\newcommand\UM@marksfont{\sffamily\mdseries}
+\newcommand\UM@marks[1]{{\UM@marksfont\let\dagger\textdagger
   \let\ddagger\textdaggerdbl #1}}
 
 \newcommand\UM@title{}
@@ -168,7 +178,8 @@
 \newcommand\reportlabel[1]{\renewcommand\UM@reportlabel{#1}}
 
 \newcommand\UM@authors{}
-\renewcommand\author[2][]{\UM@additem\UM@authors{, }%
+\newcommand\UM@authorsep{, }
+\renewcommand\author[2][]{\UM@additem\UM@authors{\UM@authorsep}%
   {\mbox{#2\ifblank{#1}{}{\textsuperscript{\UM@marks{#1}}}}}}
 
 \newcommand\UM@affiliations{}
@@ -196,7 +207,8 @@
 \newcommand\UM@metahang{\hangindent=1.25em\hangafter=1\relax}
 
 \newcommand\email[1]{\href{mailto:#1}{\texttt{#1}}}
-\renewcommand\date[1]{\metadata[Date][\faCalendar*]{#1}}
+\newcommand\UM@datetext{}
+\renewcommand\date[1]{\renewcommand\UM@datetext{#1}\metadata[Date][\faCalendar*]{#1}}
 \newcommand\correspondence[1]{\metadata[Correspondence][\faEnvelope[regular]]{#1}}
 \newcommand\github[1]{\metadata[Code][\faGithub]{#1}}
 \newcommand\huggingface[1]{\metadata[Hugging Face][\raisebox{-0.15em}{%
@@ -225,6 +237,26 @@
   {\mdseries\color{#2}\UM@labsecond}}}}
 \newcommand\labname{\UM@wordmark{umink}{milapurple}}
 
+% Extras that only some styles print: a page-one teaser figure (teaser), key
+% numbers (highlights), a report number (letterhead), a copyright line
+% (letterhead, minimal) and a French abstract with its label (bilingual).
+\newcommand\UM@teaser{}
+\newcommand\UM@teasercaption{}
+\newcommand\teaser[2]{\renewcommand\UM@teaser{#1}\renewcommand\UM@teasercaption{#2}}
+\newcommand\UM@highlights{}
+\newcommand\highlight[2]{\UM@additem\UM@highlights{\UM@highlightsep}{\UM@highlightitem{#1}{#2}}}
+\newcommand\UM@highlightsep{\par\vspace{3.6mm}}
+\newcommand\UM@highlightitem[2]{{\sffamily\bfseries\fontsize{21}{23}\selectfont
+  \color{milapurple}#1\par}\vspace{0.8mm}{\sffamily\fontsize{8.5}{11}\selectfont\color{umgrey}#2\par}}
+\newcommand\UM@reportnumber{}
+\newcommand\reportnumber[1]{\renewcommand\UM@reportnumber{#1}}
+\newcommand\UM@copyright{}
+\newcommand\copyrightnote[1]{\renewcommand\UM@copyright{#1}}
+\newcommand\UM@frenchabstract{}
+\newcommand\frenchabstract[1]{\renewcommand\UM@frenchabstract{#1}}
+\newcommand\UM@frenchlabel{Rapport technique}
+\newcommand\frenchreportlabel[1]{\renewcommand\UM@frenchlabel{#1}}
+
 % Title-block pieces %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \newcommand\UM@nohyphens{\hyphenpenalty=10000\exhyphenpenalty=10000\relax}
@@ -241,10 +273,49 @@
 \newcommand\UM@printmetadata{\ifdefempty\UM@metadata{}{{\sffamily
   \fontsize{8.5}{12.5}\selectfont\UM@metadata\par}}}
 % The same items flowing along a line instead of one per line.
+\newcommand\UM@metaalign{\raggedright}
 \newcommand\UM@printmetadatainline{\ifdefempty\UM@metadata{}{{\sffamily
-  \fontsize{8.5}{14}\selectfont\raggedright
+  \fontsize{8.5}{14}\selectfont\UM@metaalign
   \def\UM@metasep{\hspace{1.8em plus 0.8em}\allowbreak}\let\UM@metahang\relax
   \UM@metadata\par}}}
+
+\newcommand\UM@printteaser{\ifdefempty\UM@teaser{}{%
+  {\centering\UM@teaser\par}\vspace{1mm}\captionof{figure}{\UM@teasercaption}}}
+\newcommand\UM@printcopyright{\ifdefempty\UM@copyright{}{%
+  \begingroup\renewcommand\thefootnote{}%
+  \footnotetext{\sffamily\scriptsize\color{umgrey}\UM@copyright}\endgroup}}
+% A small spaced-capitals label over a block, used by several styles.
+\newcommand\UM@blocklabel[1]{{\sffamily\bfseries\tiny\color{umgrey}\UM@spaced{#1}\par}\vspace{1.5mm}}
+% The front matter one item per line, for the column layouts.
+\newcommand\UM@stackedauthors{{\def\UM@authorsep{\par}\sffamily
+  \fontsize{9}{13}\selectfont\color{umink}\UM@authors\par}}
+\newcommand\UM@stackedaffiliations{{\def\UM@affilsep{\par}\sffamily
+  \fontsize{8.5}{12}\selectfont\color{umgrey}\UM@affiliations\par}%
+  \ifdefempty\UM@contributions{}{\vspace{1.6mm}{\def\UM@affilsep{\par}\sffamily
+  \fontsize{7.5}{10.5}\selectfont\color{umgrey}\UM@contributions\par}}}
+% In a narrow column each value goes on its own line under its key, so an
+% address that cannot break never has to share a line with the key.
+\newcommand\UM@stackedmetadata{\ifdefempty\UM@metadata{}{{\sffamily
+  \fontsize{8}{11.5}\selectfont\raggedright
+  \def\UM@metasep{\par\vspace{1.6mm}}%
+  \def\UM@metaitem##1##2##3{\mbox{\makebox[1.25em][l]{\color{milapurple}##1}%
+    \ifblank{##2}{}{{\bfseries\color{umink}##2}}}\par
+    {\leftskip=1.25em\color{umgrey}##3\par}}%
+  \UM@metadata\par}}}
+\newcommand\UM@titleat[2]{% size, leading
+  {\raggedright\UM@nohyphens\sffamily\bfseries\fontsize{#1}{#2}\selectfont
+  \color{umink}\UM@title\par}}
+\newcommand\UM@reportline{\ifdefempty\UM@reportlabel{}{{\sffamily\bfseries
+  \scriptsize\color{milapurple}\UM@spaced{\UM@reportlabel}\par}\vspace{2.6mm}}}
+\newcommand\UM@byline{\UM@printauthors\vspace{1.4mm}\UM@printaffiliations
+  \ifdefempty\UM@contributions{}{\vspace{0.8mm}\UM@printcontributions}}
+\newcommand\UM@plainabstract[1]{% label
+  {\sffamily\bfseries\scriptsize\color{milapurple}\UM@spaced{#1}\par}\vspace{2mm}%
+  {\color{umink!90}\UM@abstract\par}}
+\newcommand\UM@closingrule{\vspace{4mm}{\color{umrule}\hrule height 0.4pt}\vspace{1mm}}
+\newcommand\UM@wordmarkrow[2]{% wordmark size, logo height
+  \noindent{\fontsize{#1}{#1}\selectfont\UM@wordmark{umink}{milapurple}}\hfill
+  \UM@lockup{#2}{}{umrule}\par}
 
 % Letter-spaced capitals for the report label.
 \newcommand\UM@spaced[1]{\textls[110]{\MakeUppercase{#1}}}
@@ -460,6 +531,282 @@
   \ifdefempty\UM@metadata{}{\vspace{4mm}\UM@printmetadatainline}%
   \vspace{4mm}{\color{umrule}\hrule height 0.4pt}\vspace{1mm}}
 
+% Title style: cover %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Page one is a cover in Mila purple with the wordmark, title, authors, links
+% and white logos; the abstract opens page two.
+\newif\ifUM@wastwocolumn
+\newcommand\UM@coverpage{%
+  \thispagestyle{empty}%
+  \AddToShipoutPictureBG*{\AtPageLowerLeft{\color{milapurple}\rule{\paperwidth}{\paperheight}}}%
+  \begingroup
+    \colorlet{umink}{white}\colorlet{umgrey}{white!76!milapurple}%
+    \setlength\parskip{0pt}\setlength\parindent{0pt}%
+    \noindent\begin{minipage}[t][\dimexpr\textheight-4mm\relax][t]{\linewidth}
+      \raggedright
+      {\fontsize{24}{26}\selectfont\UM@wordmark{white}{white!70!milapurple}}\hfill
+      {\sffamily\bfseries\scriptsize\color{white!76!milapurple}\UM@spaced{\UM@reportlabel}}\par
+      \vspace{2mm}{\sffamily\bfseries\tiny\color{white!76!milapurple}\UM@spaced{\UM@labdescriptor}}\par
+      \vfill
+      {\UM@nohyphens\sffamily\bfseries\fontsize{34}{40}\selectfont\color{white}\UM@title\par}%
+      \vspace{10mm}\UM@byline
+      \vfill\vfill
+      \begin{minipage}[b]{0.58\linewidth}\colorlet{milapurple}{white}\UM@printmetadata\end{minipage}\hfill
+      \UM@lockup{8.5mm}{-white}{white!45!milapurple}\par
+    \end{minipage}
+  \endgroup}
+\newcommand\UM@coverabstract{%
+  \setlength\parskip{0pt}\setlength\parindent{0pt}%
+  \UM@reportline\UM@titleat{17}{21.5}\vspace{6mm}%
+  \UM@plainabstract{Abstract}\UM@closingrule}
+\newcommand\UM@maketitlecover{%
+  \UM@wastwocolumnfalse
+  \if@twocolumn\UM@wastwocolumntrue\onecolumn\fi
+  \UM@coverpage\clearpage
+  \ifUM@wastwocolumn
+    \twocolumn[{\UM@coverabstract}\vspace{5mm}]%
+  \else
+    {\UM@coverabstract}\vspace{5mm}%
+  \fi}
+
+% Title style: hero %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% A deep aubergine block, full width from the top edge of the page, holds the
+% wordmark, logos, title and authors in white; the abstract sits below it.
+\newsavebox\UM@herobox
+\newlength\UM@heroheight
+\newcommand\UM@maketitle@hero{%
+  \sbox\UM@herobox{\begin{minipage}{\linewidth}\setlength\parskip{0pt}\raggedright
+    \colorlet{umink}{white}\colorlet{umgrey}{white!70!umnight}%
+    {\fontsize{12}{14}\selectfont\UM@wordmark{white}{white!62!milapurple}}\hfill
+      \raisebox{-1.6mm}{\UM@lockup{6.4mm}{-white}{white!30!umnight}}\par
+    \vspace{13mm}%
+    \ifdefempty\UM@reportlabel{}{{\sffamily\bfseries\scriptsize\color{white!62!milapurple}%
+      \UM@spaced{\UM@reportlabel}\par}\vspace{3mm}}%
+    {\UM@nohyphens\sffamily\bfseries\fontsize{26}{31}\selectfont\color{white}\UM@title\par}%
+    \vspace{6mm}\UM@byline
+  \end{minipage}}%
+  \global\UM@heroheight=\dimexpr 1.3cm+\ht\UM@herobox+\dp\UM@herobox+1.05cm\relax
+  \AddToShipoutPictureBG*{\AtPageUpperLeft{\raisebox{-\UM@heroheight}{%
+    \color{umnight}\rule{\paperwidth}{\UM@heroheight}}}}%
+  \vspace*{-1.2cm}\noindent\usebox\UM@herobox\par
+  \vspace{1.05cm}\vspace{7mm}%
+  \UM@plainabstract{Abstract}%
+  \ifdefempty\UM@metadata{}{\vspace{4mm}\UM@printmetadatainline}%
+  \UM@closingrule}
+
+% Title style: teaser %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% After Kimi, GLM and MiMo: a wordmark and logo header, a centred title between
+% a heavy and a light rule, centred links, a narrow abstract and the teaser
+% figure set by \teaser on page one.
+\newcommand\UM@teaserheader{%
+  \AddToShipoutPictureFG*{\AtPageUpperLeft{%
+    \put(\LenToUnit{2.5cm},\LenToUnit{-1.8cm}){{\fontsize{11}{12}\selectfont\UM@wordmark{umink}{milapurple}}}%
+    \put(\LenToUnit{\dimexpr\paperwidth-2.5cm\relax},\LenToUnit{-1.92cm}){%
+      \makebox[0pt][r]{\UM@lockup{5.6mm}{}{umrule}}}%
+    \put(\LenToUnit{2.5cm},\LenToUnit{-2.18cm}){{\color{umrule}\rule{\dimexpr\paperwidth-5cm\relax}{0.4pt}}}}}}
+\newcommand\UM@maketitle@teaser{%
+  \UM@teaserheader
+  \vspace*{0.25cm}%
+  {\centering
+    {\color{umink}\rule{\linewidth}{1.6pt}}\par\vspace{4.5mm}%
+    {\UM@nohyphens\sffamily\bfseries\fontsize{19}{24}\selectfont\color{umink}\UM@title\par}%
+    \vspace{3.8mm}{\color{umink}\rule{\linewidth}{0.5pt}}\par
+    \ifdefempty\UM@reportlabel{}{\vspace{2.8mm}{\sffamily\bfseries\scriptsize\color{milapurple}%
+      \UM@spaced{Technical report of \UM@labfirst\UM@labsecond}}\par}%
+    \vspace{4mm}\UM@byline
+    \ifdefempty\UM@metadata{}{\vspace{2.6mm}{\def\UM@metaalign{\centering}\UM@printmetadatainline}}%
+    \par}%
+  \vspace{5mm}%
+  {\centering\sffamily\bfseries\color{umink}Abstract\par}\vspace{2mm}%
+  {\leftskip=1.1cm\rightskip=1.1cm\color{umink!90}\UM@abstract\par}%
+  \ifdefempty\UM@teaser{}{\vspace{5mm}\UM@printteaser}}
+
+% Title style: split %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Two columns under a wordmark row: authors, affiliations and links stacked on
+% the left, the title and abstract on the right.
+\newcommand\UM@maketitle@split{%
+  \UM@wordmarkrow{13}{6.2mm}%
+  \vspace{3mm}{\color{umink}\hrule height 0.8pt}\vspace{8mm}%
+  \noindent
+  \begin{minipage}[t]{0.285\linewidth}\raggedright\vspace{0pt}%
+    \UM@blocklabel{Authors}\UM@stackedauthors
+    \vspace{5mm}\UM@blocklabel{Affiliations}\UM@stackedaffiliations
+    \ifdefempty\UM@metadata{}{\vspace{5mm}\UM@blocklabel{Links}\UM@stackedmetadata}%
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.665\linewidth}\vspace{0pt}%
+    \UM@reportline\UM@titleat{22}{27}%
+    \vspace{7mm}\UM@blocklabel{Abstract}%
+    {\color{umink!90}\UM@abstract\par}%
+  \end{minipage}\par
+  \UM@closingrule}
+
+% Title style: swiss %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% International typographic style: a heavy rule, an oversized flush-left title,
+% a three-column grid of authors, affiliations and links, and a sans abstract.
+% The whole paper is set in Inter under this style.
+\newcommand\UM@swisscol[2]{\begin{minipage}[t]{0.31\linewidth}\raggedright\vspace{0pt}%
+  {\sffamily\bfseries\tiny\color{umink}\UM@spaced{#1}\par}\vspace{1.8mm}#2\end{minipage}}
+\newcommand\UM@maketitle@swiss{%
+  \UM@wordmarkrow{12}{5.8mm}%
+  \vspace{3mm}{\color{umink}\hrule height 2.4pt}\vspace{2.2mm}%
+  {\sffamily\bfseries\tiny\color{umink}\UM@spaced{\UM@reportlabel}\hfill
+    \UM@spaced{\UM@datetext}\par}%
+  \vspace{10mm}\UM@titleat{31}{35}%
+  \vspace{10mm}{\color{umink}\hrule height 0.5pt}\vspace{3mm}%
+  \noindent\UM@swisscol{Authors}{\UM@stackedauthors}\hfill
+  \UM@swisscol{Affiliations}{\UM@stackedaffiliations}\hfill
+  \UM@swisscol{Links}{\UM@stackedmetadata}\par
+  \vspace{9mm}%
+  {\raggedright\sffamily\fontsize{11}{15.5}\selectfont\color{umink}\UM@abstract\par}%
+  \vspace{6mm}{\color{umink}\hrule height 0.5pt}\vspace{1mm}}
+
+% Title style: highlights %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% The abstract beside a tinted panel of key numbers from \highlight, the way
+% model reports lead with their headline results.
+\newcommand\UM@maketitle@highlights{%
+  \noindent{\fontsize{12}{14}\selectfont\UM@wordmark{umink}{milapurple}}%
+    \hspace{0.7em}{\color{umrule}\rule[-0.2em]{0.5pt}{1.05em}}\hspace{0.7em}%
+    {\sffamily\bfseries\scriptsize\color{umgrey}\UM@spaced{\UM@reportlabel}}\hfill
+    \UM@lockup{5.8mm}{}{umrule}\par
+  \vspace{10mm}\UM@titleat{22}{27}%
+  \vspace{4.5mm}{\raggedright\UM@byline\par}%
+  \vspace{8mm}%
+  \noindent
+  \begin{minipage}[t]{\ifdefempty\UM@highlights{\linewidth}{0.6\linewidth}}\vspace{0pt}%
+    \UM@plainabstract{Abstract}%
+    \ifdefempty\UM@metadata{}{\vspace{4mm}\UM@printmetadata}%
+  \end{minipage}\hfill
+  \ifdefempty\UM@highlights{}{%
+  \begin{minipage}[t]{0.345\linewidth}\vspace{0pt}%
+    \begin{tcolorbox}[enhanced, frame hidden, arc=7pt, boxrule=0pt, colback=umtint,
+        left=5mm, right=5mm, top=4.5mm, bottom=5mm, before skip=0pt, after skip=0pt]
+      \setlength\parskip{0pt}\raggedright
+      {\sffamily\bfseries\scriptsize\color{milapurple}\UM@spaced{Highlights}\par}\vspace{4mm}%
+      \UM@highlights
+    \end{tcolorbox}
+  \end{minipage}}\par
+  \UM@closingrule}
+
+% Title style: letterhead %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% A report series: centred logos, a ruled line with the series label, report
+% number and date, a small-capitals title and a serif front matter. Headings
+% switch to the serif under this style, and \copyrightnote closes page one.
+\newcommand\UM@maketitle@letterhead{%
+  {\centering
+    \UM@lockup{7.4mm}{}{umrule}\par
+    \vspace{5mm}{\color{umink}\rule{\linewidth}{0.4pt}}\par\vspace{1.8mm}%
+    {\sffamily\bfseries\tiny\color{umgrey}\UM@spaced{\UM@labfirst\UM@labsecond{} \UM@reportlabel}%
+      \ifdefempty\UM@reportnumber{}{\hspace{1.2em}\textperiodcentered\hspace{1.2em}\UM@spaced{\UM@reportnumber}}%
+      \ifdefempty\UM@datetext{}{\hspace{1.2em}\textperiodcentered\hspace{1.2em}\UM@spaced{\UM@datetext}}\par}%
+    \vspace{1.8mm}{\color{umink}\rule{\linewidth}{0.4pt}}\par
+    \vspace{11mm}%
+    {\UM@nohyphens\rmfamily\scshape\fontsize{19}{25}\selectfont\color{umink}\UM@title\par}%
+    \vspace{7mm}%
+    {\def\UM@marksfont{\rmfamily}\rmfamily\fontsize{11}{15}\selectfont\color{umink}\UM@authors\par}%
+    \vspace{2mm}{\def\UM@marksfont{\rmfamily}\rmfamily\itshape\fontsize{9.5}{13}\selectfont
+      \color{umgrey}\UM@affiliations\par}%
+    \ifdefempty\UM@contributions{}{\vspace{1mm}{\def\UM@marksfont{\rmfamily}\rmfamily
+      \fontsize{8.5}{11}\selectfont\color{umgrey}\UM@contributions\par}}%
+    \vspace{8mm}{\rmfamily\scshape\color{umink}Abstract\par}\vspace{2mm}\par}%
+  {\leftskip=1.5cm\rightskip=1.5cm\small\color{umink!90}\UM@abstract\par}%
+  \ifdefempty\UM@metadata{}{\vspace{4.5mm}{\def\UM@metaalign{\centering}\UM@printmetadatainline}}%
+  \vspace{3mm}}
+
+% Title style: bilingual %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Montreal's two languages: a French and English report label, and the English
+% abstract beside its French résumé from \frenchabstract.
+\newcommand\UM@maketitle@bilingual{%
+  \UM@wordmarkrow{12}{5.8mm}%
+  \vspace{3mm}{\color{umrule}\hrule height 0.5pt}\vspace{2.2mm}%
+  {\sffamily\bfseries\tiny\color{umgrey}\UM@spaced{\UM@frenchlabel}\hspace{0.8em}/\hspace{0.8em}%
+    \UM@spaced{\UM@reportlabel}\hfill\UM@spaced{Montr\'eal}\par}%
+  \vspace{10mm}\UM@titleat{22}{27}%
+  \vspace{4.5mm}{\raggedright\UM@byline\par}%
+  \vspace{8mm}%
+  \ifdefempty\UM@frenchabstract{\UM@plainabstract{Abstract}}{%
+    \noindent
+    \begin{minipage}[t]{0.475\linewidth}\vspace{0pt}%
+      {\sffamily\bfseries\scriptsize\color{milapurple}\UM@spaced{Abstract}\par}\vspace{2mm}%
+      {\small\color{umink!90}\UM@abstract\par}%
+    \end{minipage}\hfill
+    \begin{minipage}[t]{0.475\linewidth}\vspace{0pt}%
+      {\sffamily\bfseries\scriptsize\color{milapurple}\UM@spaced{R\'esum\'e}\par}\vspace{2mm}%
+      {\small\hyphenpenalty=5000\color{umink!90}\UM@frenchabstract\par}%
+    \end{minipage}\par}%
+  \ifdefempty\UM@metadata{}{\vspace{5mm}\UM@printmetadatainline}%
+  \UM@closingrule}
+
+% Title style: motif %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% A pale network in the top-right corner, dots on its left half and a
+% triangular lattice on its right, echoing the Mila glyph. The same seed draws
+% the same pattern on every build.
+\newcommand\UM@motifdraw{%
+  \begin{tikzpicture}[overlay, x=1cm, y=1cm]
+    \pgfmathsetseed{20260927}%
+    \foreach \j in {0,...,8}{%
+      \foreach \i in {0,...,13}{%
+        \pgfmathsetmacro\px{\i*0.62+mod(\j,2)*0.31}%
+        \pgfmathsetmacro\py{-\j*0.537}%
+        \ifnum\i<7
+          \pgfmathsetmacro\r{0.045+0.14*rnd}%
+          \fill[milapurple!15] (\px,\py) circle (\r);
+        \else
+          \ifnum\i<13 \draw[milapurple!16, line width=0.45pt] (\px,\py) -- ++(0.62,0);\fi
+          \ifnum\j<8
+            \draw[milapurple!16, line width=0.45pt] (\px,\py) -- ++(0.31,-0.537);
+            \draw[milapurple!16, line width=0.45pt] (\px,\py) -- ++(-0.31,-0.537);
+          \fi
+          \fill[milapurple!24] (\px,\py) circle (0.04);
+        \fi
+      }}%
+  \end{tikzpicture}}
+\newcommand\UM@maketitle@motif{%
+  \AddToShipoutPictureBG*{\AtPageUpperLeft{%
+    \put(\LenToUnit{\dimexpr\paperwidth-8.3cm\relax},\LenToUnit{-0.75cm}){\UM@motifdraw}}}%
+  \sbox\UM@lockupbox{\UM@lockup{6.4mm}{}{umrule}}%
+  {\raggedright
+    {\fontsize{17}{18}\selectfont\UM@wordmark{umink}{milapurple}}\par\vspace{2mm}%
+    {\sffamily\bfseries\tiny\color{umgrey}\UM@spaced{\UM@labdescriptor}}\par
+    \vspace{21mm}\UM@reportline\UM@titleat{24}{29}%
+    \vspace{5mm}\UM@byline\par}%
+  \vspace{8mm}\UM@plainabstract{Abstract}%
+  \vspace{5mm}%
+  \noindent\begin{minipage}[b]{\dimexpr\linewidth-\wd\UM@lockupbox-0.8cm\relax}
+    \UM@printmetadatainline
+  \end{minipage}\hfill\usebox\UM@lockupbox\par
+  \UM@closingrule}
+
+% Title style: minimal %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% The plain model-report page of Qwen, DeepSeek and Nemotron: logos left and
+% date right in the header, a flush-left title, a list of links, a run-in
+% abstract, and \copyrightnote at the foot of page one.
+\newcommand\UM@minimalheader{%
+  \AddToShipoutPictureFG*{\AtPageUpperLeft{%
+    \put(\LenToUnit{2.5cm},\LenToUnit{-2.0cm}){\UM@lockup{5.4mm}{}{umrule}}%
+    \put(\LenToUnit{\dimexpr\paperwidth-2.5cm\relax},\LenToUnit{-1.72cm}){%
+      \makebox[0pt][r]{\sffamily\footnotesize\color{umgrey}\UM@datetext}}}}}
+\newcommand\UM@maketitle@minimal{%
+  \UM@minimalheader
+  \vspace*{0.55cm}%
+  {\raggedright
+    {\fontsize{9.5}{11}\selectfont\UM@wordmark{umink}{milapurple}}\hspace{0.45em}%
+      {\sffamily\fontsize{9.5}{11}\selectfont\color{umgrey}\UM@reportlabel}\par
+    \vspace{3mm}\UM@titleat{20}{25}%
+    \vspace{4mm}\UM@byline
+    \ifdefempty\UM@metadata{}{\vspace{3mm}\UM@stackedmetadata}\par}%
+  \vspace{6mm}%
+  {\color{umink!90}{\sffamily\bfseries\color{umink}Abstract.}\hspace{0.5em}\UM@abstract\par}%
+  \UM@closingrule}
+
 % \maketitle %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \newcommand\UM@maketitle{%
@@ -468,15 +815,20 @@
     \csname UM@maketitle@\UM@titlestyle\endcsname
   \else
     \ClassError{udemmila}{Unknown titlestyle `\UM@titlestyle'}%
-      {Use titlestyle=card, band, rule, labcard, labband or masthead.}%
+      {Use one of card, band, rule, labcard, labband, masthead, cover, hero,
+       teaser, split, swiss, highlights, letterhead, bilingual, motif or minimal.}%
   \fi}
+% Printed after the title block, outside the two-column header.
+\newcommand\UM@aftertitle{}
 \renewcommand\maketitle{%
-  \thispagestyle{UMfirst}%
-  \if@twocolumn
-    \twocolumn[{\UM@maketitle}\vspace{7mm}]%
-  \else
-    {\UM@maketitle\par}\vspace{6mm}%
-  \fi
+  \ifdefstring\UM@titlestyle{cover}{\UM@maketitlecover}{%
+    \thispagestyle{UMfirst}%
+    \if@twocolumn
+      \twocolumn[{\UM@maketitle}\vspace{7mm}]%
+    \else
+      {\UM@maketitle\par}\vspace{6mm}%
+    \fi}%
+  \UM@aftertitle
   \global\let\maketitle\relax}
 
 \newcommand\UM@pdftitle{%
@@ -548,5 +900,24 @@
   fonttitle=\sffamily\bfseries\footnotesize, title=#1,
   fontupper=\ttfamily\footnotesize, left=8pt, right=8pt, top=5pt, bottom=5pt,
   before skip=8pt, after skip=8pt}
+
+% Style-specific settings %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\ifdefstring\UM@titlestyle{swiss}{\renewcommand*\familydefault{\sfdefault}%
+  \setlength\emergencystretch{3em}}{}
+\ifdefstring\UM@titlestyle{letterhead}{%
+  \titleformat{\section}
+    {\rmfamily\bfseries\fontsize{14}{17}\selectfont\color{umink}}
+    {\color{milapurple}\thesection}{0.7em}{}%
+  \titleformat{\subsection}
+    {\rmfamily\bfseries\fontsize{11.5}{14}\selectfont\color{umink}}
+    {\color{milapurple}\thesubsection}{0.65em}{}%
+  \titleformat{\subsubsection}
+    {\rmfamily\bfseries\normalsize\color{umink}}
+    {\color{milapurple}\thesubsubsection}{0.6em}{}%
+  \titleformat{\paragraph}[runin]
+    {\rmfamily\bfseries\normalsize\color{umink}}{\theparagraph}{0.6em}{}%
+  \let\UM@aftertitle\UM@printcopyright}{}
+\ifdefstring\UM@titlestyle{minimal}{\let\UM@aftertitle\UM@printcopyright}{}
 
 \endinput

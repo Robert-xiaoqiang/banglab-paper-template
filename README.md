@@ -7,7 +7,7 @@
 Copy this project, keep `udemmila.cls` and `assets/` next to your main file, and start from `main.tex`.
 
 ```latex
-\documentclass[titlestyle=card]{udemmila}   % card | band | rule | labcard | labband | masthead
+\documentclass[titlestyle=card]{udemmila}   % one of the sixteen styles below
 
 \title{Your Title}
 \lab{Bang}{Lab}                              % wordmark for the lab styles
@@ -35,7 +35,9 @@ Copy this project, keep `udemmila.cls` and `assets/` next to your main file, and
 
 ## Title styles
 
-The `titlestyle` option is the only choice that changes how the paper looks at a glance. `card` puts the whole front matter in a tinted card with a purple-to-blue edge and the logos beside the metadata, after Meta FAIR and ServiceNow. `band` runs a full-width purple band with white logos across the top of page one. `rule` puts colour logos in the page-one header over a centred title between purple rules and an outlined abstract, after ByteDance Seed and LeapLab. The three lab styles carry the BangLab wordmark and draw no coloured edge bar anywhere. `labcard` is the card without its edge, with the wordmark opening the card. `labband` sets the wordmark in white on a solid purple band and puts the abstract and links in one tinted panel. `masthead` is an editorial first page with no boxes, the wordmark and logos above a double rule and the abstract set as text. They also put the wordmark in the running head and draw the takeaway box without its left rule. Everything else is identical across all six styles.
+The `titlestyle` option is the only choice that changes how the paper looks at a glance. `card` puts the whole front matter in a tinted card with a purple-to-blue edge and the logos beside the metadata, after Meta FAIR and ServiceNow. `band` runs a full-width purple band with white logos across the top of page one. `rule` puts colour logos in the page-one header over a centred title between purple rules and an outlined abstract, after ByteDance Seed and LeapLab. The three lab styles carry the BangLab wordmark and draw no coloured edge bar anywhere. `labcard` is the card without its edge, with the wordmark opening the card. `labband` sets the wordmark in white on a solid purple band and puts the abstract and links in one tinted panel. `masthead` is an editorial first page with no boxes, the wordmark and logos above a double rule and the abstract set as text. They also put the wordmark in the running head and draw the takeaway box without its left rule.
+
+Ten more lab styles came from a survey of twenty industry reports (Qwen, Kimi, MiMo, GLM, JD.com, DeepSeek, MiniMax, Gemma, Hunyuan, InternVL, LongCat, Phi, OLMo, Nemotron, Apple, Keye, Ling, Magistral, Step and SmolLM). `cover` makes page one a full purple cover. `hero` holds the title in a deep aubergine block from the top edge. `teaser` sets the title between a heavy and a light rule and prints the `\teaser` figure on page one. `split` stacks authors and links in a left column. `swiss` uses an oversized title over a three-column grid and sets the whole paper in Inter. `highlights` puts the abstract beside the `\highlight` numbers. `letterhead` is a report series with `\reportnumber`, a small-capitals title and serif headings. `bilingual` sets the abstract beside its French résumé from `\frenchabstract`. `motif` draws a pale network after the Mila glyph in the corner. `minimal` is the plain Qwen and DeepSeek page with `\copyrightnote`. Appendix B of `main.tex` has the full table. Everything below the title block is identical across all sixteen styles, except that `swiss` sets the body in Inter and `letterhead` sets the headings in the serif.
 
 The other class option is `numbers`, which switches citations from (Author, Year) to [1]. Every `article` option, such as `11pt` or `twocolumn`, passes through.
 
@@ -55,8 +57,9 @@ A paper written for Meta FAIR's `fairmeta.cls`, ServiceNow's class or ByteDance 
 | `\beginappendix` (heading plus appendix contents), `\beginappendix*` (heading only) | Meta FAIR and Seed |
 | `\metadata[Key][\faIcon]{Value}` with `\date`, `\correspondence`, `\github`, `\huggingface`, `\projectpage` | Meta FAIR and ServiceNow |
 | `\lab{Bang}{Lab}`, `\labdescriptor{...}`, and `\labname` for the wordmark in running text | the lab styles |
+| `\teaser{figure}{caption}`, `\highlight{56.7}{label}`, `\reportnumber`, `\copyrightnote`, `\frenchabstract`, `\frenchreportlabel` | printed only by the styles built around them |
 
-The colours are available to the paper as `milapurple` (`#662E7D`), `udemblue` (`#0057AC`), `umink`, `umgrey`, `umtint` and `umrule`.
+The colours are available to the paper as `milapurple` (`#662E7D`), `udemblue` (`#0057AC`), `umink`, `umgrey`, `umtint` and `umrule`. For two-series charts, `chartpurple` (`#7E3F97`, the method) and `chartblue` (`#5B8FD3`, a baseline) pass lightness, chroma and colour-blind separation checks, and the teaser chart in `main.tex` uses them.
 
 ## Building
 
@@ -68,4 +71,4 @@ Overleaf's default pdfLaTeX builds `main.tex` as is. Locally, `latexmk -pdf main
 
 ## Review folder
 
-`review/template-vote.pdf` is the second-round vote sheet. It sets the two first-round styles that were kept (E `card`, F `band`) against the three lab styles (H `labcard`, I `labband`, J `masthead`), two full pages each. The same candidates, with the first-round industry templates, are on the preview site at https://claude.ai/artifact/KNvaacerFRRXtW3pdt9YLJ. The folder is for choosing the default `titlestyle` and can be deleted once that is settled.
+`review/template-vote.pdf` is the third-round vote sheet: the two first-round styles that were kept (E `card`, F `band`), the three round-two lab styles (H `labcard`, I `labband`, J `masthead`) and the ten new ones (K to T), two full pages each. The same fifteen, with the twenty-four industry reports they drew on, are on the preview site at https://claude.ai/artifact/KNvaacerFRRXtW3pdt9YLJ. The folder is for choosing the default `titlestyle` and can be deleted once that is settled.

@@ -3,10 +3,14 @@
 \documentclass[titlestyle=card]{udemmila}
 % titlestyle = card | band | rule          (UdeM and Mila logos)
 %            | labcard | labband | masthead (plus the lab wordmark, no edge bars)
+%            | cover | hero | teaser | split | swiss | highlights
+%            | letterhead | bilingual | motif | minimal   (see Appendix B)
 
 % The class already loads graphicx, booktabs, amsmath, amssymb, xcolor
 % (with the table option), tcolorbox, hyperref, cleveref and natbib.
 \usepackage{multirow}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
 
 % Front matter %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -40,8 +44,54 @@ about 150 to 250 words.}
 
 \date{\today}
 \correspondence{\email{first.author@mila.quebec}, \email{senior.author@umontreal.ca}}
-\github{\url{https://github.com/your-org/your-repo}}
-\huggingface{\url{https://huggingface.co/your-org}}
+\github{\href{https://github.com/your-org/your-repo}{github.com/your-org/your-repo}}
+\huggingface{\href{https://huggingface.co/your-org}{huggingface.co/your-org}}
+
+% Printed only by the styles built around them (Appendix B): the teaser figure
+% by teaser, key numbers by highlights, the report number and copyright line
+% by letterhead and minimal, the French abstract by bilingual.
+\teaser{%
+  \begin{tikzpicture}
+    \begin{axis}[
+        width=\linewidth, height=4.4cm, ybar=2pt, bar width=10pt,
+        ymin=0, ymax=80, ytick={0,20,40,60,80}, enlarge x limits=0.12,
+        /pgf/number format/assume math mode=true,
+        symbolic x coords={Bench-A,Bench-B,Bench-C,Bench-D,Average}, xtick=data,
+        axis lines*=left, axis line style={draw=umrule}, tick style={draw=none},
+        ymajorgrids, grid style={draw=black!8},
+        ticklabel style={font=\sffamily\scriptsize, text=umgrey},
+        ylabel={Score}, ylabel style={font=\sffamily\scriptsize, text=umgrey},
+        legend style={font=\sffamily\scriptsize, draw=none, fill=none,
+          at={(0.5,1.02)}, anchor=south, legend columns=2,
+          /tikz/every even column/.append style={column sep=12pt}},
+        area legend,
+        nodes near coords style={font=\sffamily\tiny, text=umink},
+        every node near coord/.append style={
+          /pgf/number format/.cd, fixed, fixed zerofill, precision=1, assume math mode=true}]
+      \addplot[fill=chartblue, draw=none]
+        coordinates {(Bench-A,49.5) (Bench-B,60.2) (Bench-C,37.1) (Bench-D,66.4) (Average,53.3)};
+      \addplot[fill=chartpurple, draw=none, nodes near coords]
+        coordinates {(Bench-A,53.1) (Bench-B,63.7) (Bench-C,41.8) (Bench-D,68.0) (Average,56.7)};
+      \legend{Strongest published baseline, Ours}
+    \end{axis}
+  \end{tikzpicture}}{Teaser figure placeholder, drawn from the placeholder scores of
+  \cref{tab:results}. Replace it with the headline result of your paper.}
+\highlight{56.7}{average score over the four benchmarks}
+\highlight{+3.4}{points over the strongest published baseline}
+\highlight{41.8}{on Bench-C, the hardest of the four}
+\reportnumber{BangLab-TR-2026-01}
+\copyrightnote{\textcopyright\ 2026 BangLab, Universit\'e de Montr\'eal and Mila.}
+\frenchabstract{Ce gabarit met en page les prépublications arXiv des auteurs de
+l'Université de Montréal et de Mila. Il reprend ce qui fonctionne dans les styles
+de prépublication industriels de Meta FAIR, ByteDance Seed, ServiceNow et LeapLab,
+une page de titre qui se lit d'un seul bloc, des titres sans empattement sur un
+texte à empattement et des métadonnées cliquables, et les compose en violet Mila
+et en bleu UdeM avec le nom de BangLab. Une seule option de classe choisit la page
+de titre. Les commandes d'auteur, d'affiliation et de métadonnées suivent la
+convention de Meta FAIR, si bien qu'un article écrit pour la classe de Meta FAIR,
+de ServiceNow ou de ByteDance Seed passe à celle-ci en changeant sa ligne
+\texttt{\textbackslash documentclass}. Remplacez ce paragraphe par votre résumé,
+en un seul paragraphe de 150 à 250 mots.}
 
 \begin{document}
 
@@ -111,7 +161,8 @@ three lab styles add the \labname{} wordmark and draw no coloured edge bars.
 \texttt{labcard} is the card with the wordmark in place of its edge,
 \texttt{labband} sets the wordmark in white on a solid purple band, and
 \texttt{masthead} opens the page with the wordmark and logos above a double
-rule and sets the abstract as plain text.
+rule and sets the abstract as plain text. Ten further styles, from a full
+cover page to a two-language title page, are described in \cref{app:styles}.
 
 \begin{table*}[t]
   \centering
@@ -125,6 +176,7 @@ rule and sets the abstract as plain text.
     \midrule
     \texttt{titlestyle} & \texttt{card} (default), \texttt{band}, \texttt{rule} & Layout of the first page \\
                         & \texttt{labcard}, \texttt{labband}, \texttt{masthead} & The same with the lab wordmark \\
+                        & ten more, listed in \cref{tab:styles} & See \cref{app:styles} \\
     \texttt{numbers}    & flag & Numeric citations [1] instead of (Author, Year) \\
     \bottomrule
   \end{tabular}
@@ -158,6 +210,8 @@ any other kind with a Font Awesome icon.
     \verb|\runningtitle{...}|               & Header text on every page after the first \\
     \verb|\reportlabel{...}|                & Small label on the title page, Preprint by default \\
     \verb|\lab{Bang}{Lab}|, \verb|\labdescriptor{...}| & Lab wordmark and the line under it (lab styles) \\
+    \verb|\teaser{figure}{caption}|, \verb|\highlight{56.7}{label}| & Page-one figure (teaser), key numbers (highlights) \\
+    \verb|\reportnumber{...}|, \verb|\copyrightnote{...}|, \verb|\frenchabstract{...}| & Used by letterhead, minimal and bilingual \\
     \bottomrule
   \end{tabular}
 \end{table*}
@@ -231,6 +285,43 @@ meaning, and asset paths such as their logo files are no longer needed. Author
 marks may be written as text or as maths symbols, since
 \texttt{\textbackslash dagger} and \texttt{\textbackslash ddagger} are mapped to
 their text forms inside the marks.
+
+\section{Title styles}
+\label{app:styles}
+
+\Cref{tab:styles} lists every value of \texttt{titlestyle}. All but the first
+three carry the lab wordmark, put it in the running head, and draw the takeaway
+box without a coloured edge.
+
+\begin{table*}[t]
+  \centering
+  \caption{The sixteen title styles. The last column names the preamble commands
+  a style prints beyond the common front matter.}
+  \label{tab:styles}
+  \small
+  \begin{tabular}{@{}lp{10.4cm}l@{}}
+    \toprule
+    \textbf{Style} & \textbf{First page} & \textbf{Extra} \\
+    \midrule
+    \texttt{card}       & Tinted card with a purple-to-blue edge, logos beside the metadata & \\
+    \texttt{band}       & Gradient purple band with white logos, abstract with a left rule & \\
+    \texttt{rule}       & Colour logos in the header, centred title between purple rules & \\
+    \texttt{labcard}    & The card without its edge, opened by the wordmark & \\
+    \texttt{labband}    & Solid purple band with the white wordmark, abstract panel & \\
+    \texttt{masthead}   & Wordmark and logos above a double rule, no boxes & \\
+    \texttt{cover}      & A full purple cover page, the abstract on page two & \\
+    \texttt{hero}       & A deep aubergine block from the top edge holding the title & \\
+    \texttt{teaser}     & Title between a heavy and a light rule, teaser figure below the abstract & \verb|\teaser| \\
+    \texttt{split}      & Authors and links in a left column, title and abstract on the right & \\
+    \texttt{swiss}      & Oversized title, three-column grid, the whole paper in Inter & \\
+    \texttt{highlights} & The abstract beside a panel of key numbers & \verb|\highlight| \\
+    \texttt{letterhead} & A report series line, small-capitals title, serif headings & \verb|\reportnumber| \\
+    \texttt{bilingual}  & French and English label, the abstract beside its French résumé & \verb|\frenchabstract| \\
+    \texttt{motif}      & A pale network pattern after the Mila glyph in the top corner & \\
+    \texttt{minimal}    & Logos and date in the header, run-in abstract, copyright line & \verb|\copyrightnote| \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
 
 \section{Brand assets}
 \label{app:brand}
