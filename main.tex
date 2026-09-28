@@ -1,28 +1,19 @@
 % !TeX program = pdflatex
 \ifdefined\pdfoutput\pdfoutput=1\fi % arXiv builds with pdfLaTeX when it sees this line
-\documentclass[titlestyle=card]{udemmila}
-% titlestyle = card | band | rule          (UdeM and Mila logos)
-%            | labcard | labband | masthead (plus the lab wordmark, no edge bars)
-%            | cover | hero | teaser | split | swiss | highlights
-%            | letterhead | bilingual | motif | minimal   (see Appendix B)
+\documentclass{banglab}
+% Class options: [numbers] for [1] citations instead of (Author, Year),
+% [twocolumn] for a two-column body, and any other article option.
 
-% The class already loads graphicx, booktabs, amsmath, amssymb, xcolor
-% (with the table option), tcolorbox, hyperref, cleveref and natbib.
-\usepackage{multirow}
-\usepackage{pgfplots}
-\pgfplotsset{compat=1.18}
+\input{commands}
 
 % Front matter %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \title{Title of Your Paper in Two Lines at Most:\\ A Subtitle That Names the Method}
-\runningtitle{Short Title for the Running Head}
 \reportlabel{Technical Report}
-\lab{Bang}{Lab}                                        % wordmark, used by the lab styles
-\labdescriptor{Universit\'e de Montr\'eal \textperiodcentered{} Mila}
 
 \author[1,2,*]{First Author}
 \author[1,2,*]{Second Author}
-\author[1,3]{Third Author}
+\author[1,2]{Third Author}
 \author[1,2,3,\dagger]{Senior Author}
 
 \affiliation[1]{Mila -- Quebec AI Institute}
@@ -31,305 +22,32 @@
 \contribution[*]{Equal contribution}
 \contribution[\dagger]{Corresponding author}
 
-\abstract{This template typesets arXiv preprints for authors at Universit\'e de
-Montr\'eal and Mila. It keeps what works in the industry preprint styles of Meta
-FAIR, ByteDance Seed, ServiceNow and LeapLab, a front matter that reads as one
-block, sans-serif headings over a serif body, and metadata a reader can click,
-and sets them in Mila purple and UdeM blue with the BangLab wordmark. A single
-class option chooses the title page. The author, affiliation and metadata commands follow the Meta
-FAIR convention, so a paper written for the Meta FAIR, ServiceNow or ByteDance
-Seed class moves here by changing its \texttt{\textbackslash documentclass}
-line. Replace this paragraph with your abstract and keep it to one paragraph of
-about 150 to 250 words.}
+\abstract{\input{sections/abstract}}
 
 \date{\today}
 \correspondence{\email{first.author@mila.quebec}, \email{senior.author@umontreal.ca}}
 \github{\href{https://github.com/your-org/your-repo}{github.com/your-org/your-repo}}
 \huggingface{\href{https://huggingface.co/your-org}{huggingface.co/your-org}}
 
-% Printed only by the styles built around them (Appendix B): the teaser figure
-% by teaser, key numbers by highlights, the report number and copyright line
-% by letterhead and minimal, the French abstract by bilingual.
-\teaser{%
-  \begin{tikzpicture}
-    \begin{axis}[
-        width=\linewidth, height=4.4cm, ybar=2pt, bar width=10pt,
-        ymin=0, ymax=80, ytick={0,20,40,60,80}, enlarge x limits=0.12,
-        /pgf/number format/assume math mode=true,
-        symbolic x coords={Bench-A,Bench-B,Bench-C,Bench-D,Average}, xtick=data,
-        axis lines*=left, axis line style={draw=umrule}, tick style={draw=none},
-        ymajorgrids, grid style={draw=black!8},
-        ticklabel style={font=\sffamily\scriptsize, text=umgrey},
-        ylabel={Score}, ylabel style={font=\sffamily\scriptsize, text=umgrey},
-        legend style={font=\sffamily\scriptsize, draw=none, fill=none,
-          at={(0.5,1.02)}, anchor=south, legend columns=2,
-          /tikz/every even column/.append style={column sep=12pt}},
-        area legend,
-        nodes near coords style={font=\sffamily\tiny, text=umink},
-        every node near coord/.append style={
-          /pgf/number format/.cd, fixed, fixed zerofill, precision=1, assume math mode=true}]
-      \addplot[fill=chartblue, draw=none]
-        coordinates {(Bench-A,49.5) (Bench-B,60.2) (Bench-C,37.1) (Bench-D,66.4) (Average,53.3)};
-      \addplot[fill=chartpurple, draw=none, nodes near coords]
-        coordinates {(Bench-A,53.1) (Bench-B,63.7) (Bench-C,41.8) (Bench-D,68.0) (Average,56.7)};
-      \legend{Strongest published baseline, Ours}
-    \end{axis}
-  \end{tikzpicture}}{Teaser figure placeholder, drawn from the placeholder scores of
-  \cref{tab:results}. Replace it with the headline result of your paper.}
-\highlight{56.7}{average score over the four benchmarks}
-\highlight{+3.4}{points over the strongest published baseline}
-\highlight{41.8}{on Bench-C, the hardest of the four}
-\reportnumber{BangLab-TR-2026-01}
-\copyrightnote{\textcopyright\ 2026 BangLab, Universit\'e de Montr\'eal and Mila.}
-\frenchabstract{Ce gabarit met en page les prépublications arXiv des auteurs de
-l'Université de Montréal et de Mila. Il reprend ce qui fonctionne dans les styles
-de prépublication industriels de Meta FAIR, ByteDance Seed, ServiceNow et LeapLab,
-une page de titre qui se lit d'un seul bloc, des titres sans empattement sur un
-texte à empattement et des métadonnées cliquables, et les compose en violet Mila
-et en bleu UdeM avec le nom de BangLab. Une seule option de classe choisit la page
-de titre. Les commandes d'auteur, d'affiliation et de métadonnées suivent la
-convention de Meta FAIR, si bien qu'un article écrit pour la classe de Meta FAIR,
-de ServiceNow ou de ByteDance Seed passe à celle-ci en changeant sa ligne
-\texttt{\textbackslash documentclass}. Remplacez ce paragraphe par votre résumé,
-en un seul paragraphe de 150 à 250 mots.}
+% An optional full-width figure under the title card:
+% \teaser{\input{figures/benchmark-scores}}{Caption of the teaser figure.\label{fig:teaser}}
+
+% Document %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
 
 \maketitle
 
-\section{Introduction}
-\label{sec:intro}
-
-Industry labs publish their arXiv preprints in house styles that make a paper
-recognisable before its title is read. Meta FAIR sets the whole front matter in
-a tinted card \citep{hao2024coconut}, ByteDance Seed rules off a centred title
-under a logo header \citep{sheng2026rlcer}, ServiceNow frames the card in its
-brand green and adds link lines for code and models \citep{wang2026mempi}, and
-LeapLab puts the abstract on a grey panel below a logo and date
-\citep{yue2025limit}. This class brings those choices to Universit\'e de
-Montr\'eal and Mila, with the official UdeM and Mila marks and colours.
-
-The body text is Latin Modern, so mathematics such as the attention operator of
-\citet{vaswani2017attention},
-\begin{equation}
-  \operatorname{Attention}(Q, K, V) = \operatorname{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right) V,
-  \label{eq:attention}
-\end{equation}
-matches the surrounding text. Everything that carries the brand, the title
-block, headings, caption labels and the running head, is set in Inter, the
-closest free match to Mila's own typeface. \Cref{fig:overview} is where the
-overview figure of a paper would go, and \cref{sec:usage} explains the class
-options and the front matter commands.
-
-\begin{figure*}[t]
-  \centering
-  \begin{tikzpicture}[
-      font=\sffamily\small,
-      stage/.style={rounded corners=5pt, minimum height=1.25cm, minimum width=3.3cm,
-        align=center, draw=milapurple!55, line width=0.6pt, fill=umtint},
-      core/.style={stage, fill=milapurple, draw=milapurple, text=white},
-      flow/.style={-latex, line width=0.8pt, draw=milapurple!70}]
-    \node[stage] (in)  at (0,0)   {\textbf{Input}\\[1pt]\footnotesize task and context};
-    \node[core]  (m)   at (4.6,0) {\textbf{Your method}\\[1pt]\footnotesize the component that is new};
-    \node[stage] (out) at (9.2,0) {\textbf{Output}\\[1pt]\footnotesize answer and trace};
-    \node[stage, draw=udemblue!60, fill=udemblue!7, minimum width=4.2cm]
-      (fb) at (4.6,-1.85) {\textbf{Feedback}\\[1pt]\footnotesize reward, critique or memory};
-    \draw[flow] (in) -- (m);
-    \draw[flow] (m) -- (out);
-    \draw[flow, draw=udemblue!70] (out.south) |- (fb.east);
-    \draw[flow, draw=udemblue!70] (fb.north) -- (m.south);
-  \end{tikzpicture}
-  \caption{Overview figure placeholder. The method node is filled in Mila purple
-  and the feedback path is drawn in UdeM blue, the two brand colours this class
-  defines as \texttt{milapurple} and \texttt{udemblue}.}
-  \label{fig:overview}
-\end{figure*}
-
-\section{Using the class}
-\label{sec:usage}
-
-\subsection{Class options}
-
-The class builds on \texttt{article}, so every \texttt{article} option such as
-\texttt{11pt} or \texttt{twocolumn} passes through unchanged. \Cref{tab:options}
-lists the two options the class adds. The title style is the only choice that
-changes how the paper looks at a glance. The \texttt{card} style follows Meta
-FAIR and ServiceNow, \texttt{band} puts a full-width purple band with white
-logos across the top of the first page, and \texttt{rule} follows ByteDance Seed
-and LeapLab with colour logos in the header and a ruled, centred title. The
-three lab styles add the \labname{} wordmark and draw no coloured edge bars.
-\texttt{labcard} is the card with the wordmark in place of its edge,
-\texttt{labband} sets the wordmark in white on a solid purple band, and
-\texttt{masthead} opens the page with the wordmark and logos above a double
-rule and sets the abstract as plain text. Ten further styles, from a full
-cover page to a two-language title page, are described in \cref{app:styles}.
-
-\begin{table*}[t]
-  \centering
-  \caption{Options added by \texttt{udemmila.cls}. Any other option is passed to
-  \texttt{article}.}
-  \label{tab:options}
-  \small
-  \begin{tabular}{@{}lll@{}}
-    \toprule
-    \textbf{Option} & \textbf{Values} & \textbf{Effect} \\
-    \midrule
-    \texttt{titlestyle} & \texttt{card} (default), \texttt{band}, \texttt{rule} & Layout of the first page \\
-                        & \texttt{labcard}, \texttt{labband}, \texttt{masthead} & The same with the lab wordmark \\
-                        & ten more, listed in \cref{tab:styles} & See \cref{app:styles} \\
-    \texttt{numbers}    & flag & Numeric citations [1] instead of (Author, Year) \\
-    \bottomrule
-  \end{tabular}
-\end{table*}
-
-\subsection{Front matter}
-
-The front matter is declared in the preamble and printed by
-\texttt{\textbackslash maketitle}. \Cref{tab:frontmatter} lists the commands.
-Authors take their affiliation marks as an optional argument, and the abstract
-is a command rather than an environment, both as in the Meta FAIR class. Every
-metadata line is optional, and \texttt{\textbackslash metadata} adds a line of
-any other kind with a Font Awesome icon.
-
-\begin{table*}[t]
-  \centering
-  \caption{Front matter commands, all used in the preamble.}
-  \label{tab:frontmatter}
-  \small
-  \begin{tabular}{@{}ll@{}}
-    \toprule
-    \textbf{Command} & \textbf{Prints} \\
-    \midrule
-    \verb|\title{...}|                      & Title, with \verb|\\| for a line break \\
-    \verb|\author[1,2,*]{Name}|             & Author with affiliation and contribution marks \\
-    \verb|\affiliation[1]{Mila}|            & Affiliation for mark 1 \\
-    \verb|\contribution[*]{Equal contribution}| & Note for mark $*$ \\
-    \verb|\abstract{...}|                   & Abstract \\
-    \verb|\date|, \verb|\correspondence|, \verb|\github|, \verb|\huggingface|, \verb|\projectpage| & Metadata line with its icon \\
-    \verb|\metadata[Key][\faBook]{Value}|   & Any other metadata line \\
-    \verb|\runningtitle{...}|               & Header text on every page after the first \\
-    \verb|\reportlabel{...}|                & Small label on the title page, Preprint by default \\
-    \verb|\lab{Bang}{Lab}|, \verb|\labdescriptor{...}| & Lab wordmark and the line under it (lab styles) \\
-    \verb|\teaser{figure}{caption}|, \verb|\highlight{56.7}{label}| & Page-one figure (teaser), key numbers (highlights) \\
-    \verb|\reportnumber{...}|, \verb|\copyrightnote{...}|, \verb|\frenchabstract{...}| & Used by letterhead, minimal and bilingual \\
-    \bottomrule
-  \end{tabular}
-\end{table*}
-
-\section{Figures, tables and boxes}
-\label{sec:floats}
-
-Captions open with a purple label in Inter. A caption that fits on one line is
-centred, and a longer one is justified. Table captions sit above the table.
-\Cref{tab:results} shows the recommended results layout, with booktabs rules, the
-best entry in bold, the runner-up underlined and the proposed method on a row
-tinted with \texttt{umtint}.
-
-\begin{table*}[t]
-  \centering
-  \caption{Example results table. All numbers are placeholders.}
-  \label{tab:results}
-  \small
-  \begin{tabular}{@{}lccccc@{}}
-    \toprule
-    \textbf{Method} & \textbf{Bench-A} & \textbf{Bench-B} & \textbf{Bench-C} & \textbf{Bench-D} & \textbf{Avg.} \\
-    \midrule
-    Base model            & 41.2 & 55.0 & 30.4 & 62.1 & 47.2 \\
-    Prompting baseline    & 44.8 & 57.3 & 33.9 & 63.0 & 49.8 \\
-    Published method      & \underline{49.5} & \underline{60.2} & \underline{37.1} & \underline{66.4} & \underline{53.3} \\
-    \rowcolor{umtint}
-    Ours                  & \textbf{53.1} & \textbf{63.7} & \textbf{41.8} & \textbf{68.0} & \textbf{56.7} \\
-    \bottomrule
-  \end{tabular}
-\end{table*}
-
-Two boxes cover the content arXiv papers in this area most often set apart.
-The \texttt{takeaway} box states a finding the reader should keep, and the
-\texttt{promptbox} holds a prompt or a model output in Inconsolata, with
-verbatim content allowed inside.
-
-\begin{takeaway}[Takeaway]
-State the finding in one or two sentences with the number that supports it, for
-example that the method improves the average score by 3.4 points over the
-strongest published baseline in \cref{tab:results}.
-\end{takeaway}
-
-\begin{promptbox}[Prompt template for the judge model]
-You are grading a response to the task below.\\
-Task: \{task\}\\
-Response: \{response\}\\
-Reply with a score from 1 to 10 and one sentence of justification.
-\end{promptbox}
-
-\section{Conclusion}
-
-Replace this sample text with your paper. The appendix below starts with
-\texttt{\textbackslash beginappendix}, which opens a new page, prints the
-appendix heading and lists the appendix sections, and
-\texttt{\textbackslash beginappendix*} leaves the list out.
+\input{sections/introduction}
+\input{sections/related-work}
+\input{sections/method}
+\input{sections/experiments}
+\input{sections/conclusion}
 
 \bibliographystyle{plainnat}
-\bibliography{references}
+\bibliography{bib/references}
 
 \beginappendix
-
-\section{Porting a paper from another template}
-\label{app:porting}
-
-A paper written for the Meta FAIR, ServiceNow or ByteDance Seed class compiles
-here after its \texttt{\textbackslash documentclass} line changes to
-\texttt{udemmila}. The commands those classes define, including
-\texttt{\textbackslash checkdata}, \texttt{\textbackslash morelinks},
-\texttt{\textbackslash beginappendix} and \texttt{\textbackslash nm}, keep their
-meaning, and asset paths such as their logo files are no longer needed. Author
-marks may be written as text or as maths symbols, since
-\texttt{\textbackslash dagger} and \texttt{\textbackslash ddagger} are mapped to
-their text forms inside the marks.
-
-\section{Title styles}
-\label{app:styles}
-
-\Cref{tab:styles} lists every value of \texttt{titlestyle}. All but the first
-three carry the lab wordmark, put it in the running head, and draw the takeaway
-box without a coloured edge.
-
-\begin{table*}[t]
-  \centering
-  \caption{The sixteen title styles. The last column names the preamble commands
-  a style prints beyond the common front matter.}
-  \label{tab:styles}
-  \small
-  \begin{tabular}{@{}lp{10.4cm}l@{}}
-    \toprule
-    \textbf{Style} & \textbf{First page} & \textbf{Extra} \\
-    \midrule
-    \texttt{card}       & Tinted card with a purple-to-blue edge, logos beside the metadata & \\
-    \texttt{band}       & Gradient purple band with white logos, abstract with a left rule & \\
-    \texttt{rule}       & Colour logos in the header, centred title between purple rules & \\
-    \texttt{labcard}    & The card without its edge, opened by the wordmark & \\
-    \texttt{labband}    & Solid purple band with the white wordmark, abstract panel & \\
-    \texttt{masthead}   & Wordmark and logos above a double rule, no boxes & \\
-    \texttt{cover}      & A full purple cover page, the abstract on page two & \\
-    \texttt{hero}       & A deep aubergine block from the top edge holding the title & \\
-    \texttt{teaser}     & Title between a heavy and a light rule, teaser figure below the abstract & \verb|\teaser| \\
-    \texttt{split}      & Authors and links in a left column, title and abstract on the right & \\
-    \texttt{swiss}      & Oversized title, three-column grid, the whole paper in Inter & \\
-    \texttt{highlights} & The abstract beside a panel of key numbers & \verb|\highlight| \\
-    \texttt{letterhead} & A report series line, small-capitals title, serif headings & \verb|\reportnumber| \\
-    \texttt{bilingual}  & French and English label, the abstract beside its French résumé & \verb|\frenchabstract| \\
-    \texttt{motif}      & A pale network pattern after the Mila glyph in the top corner & \\
-    \texttt{minimal}    & Logos and date in the header, run-in abstract, copyright line & \verb|\copyrightnote| \\
-    \bottomrule
-  \end{tabular}
-\end{table*}
-
-\section{Brand assets}
-\label{app:brand}
-
-The logos in \texttt{assets/} are vector PDFs converted from the SVG files
-served by \url{https://mila.quebec}. The Mila wordmark keeps its own purple,
-\texttt{\#662E7D}, and the UdeM signature is set in UdeM blue,
-\texttt{\#0057AC}, the colour \url{https://www.umontreal.ca} uses. White versions
-of both are used on the purple band.
+\input{sections/appendix}
 
 \end{document}

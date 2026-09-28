@@ -1,0 +1,63 @@
+# Paper conventions
+
+These rules hold for every paper built on `banglab.cls`, for the people writing it and for coding agents. Claude Code reads this file through `CLAUDE.md`, and Codex reads it directly. Keep it short: a rule belongs here only if breaking it costs a reader or a co-author something.
+
+## Files
+
+- `main.tex` holds the class options, the front matter and the order of the `\input` lines. Prose lives in `sections/`.
+- `sections/<name>.tex` holds one section per file, named by its content: `introduction.tex`, `related-work.tex`, `method.tex`. The appendix is `sections/appendix.tex`.
+- The abstract is `sections/abstract.tex`, read through `\abstract{\input{sections/abstract}}`. That file may hold anything a section can. The `abstract` environment also works, but it cannot hold `\verb`, or a `#` or `%` inside a link.
+- `figures/<name>.tex` (TikZ or pgfplots) or `figures/<name>.pdf` holds the drawing only. The `figure` environment, the caption and the label stay in the section file.
+- `tables/<name>.tex` holds the `tabular` only. The `table` environment, the caption and the label stay in the section file.
+- `bib/references.bib` is the one bibliography. Keys follow `<first author's surname><year><first title word>`, as in `vaswani2017attention`.
+- `commands.tex` holds the packages and macros the paper adds. Do not edit `banglab.cls` or `brand/` for one paper.
+- File names are lowercase words joined by hyphens and say what the file holds, never a number or a version (`main-results.tex`, not `table2.tex` or `results-v2.tex`).
+
+## Labels and cross-references
+
+- Prefixes: `sec:` for sections and subsections, `app:` for appendix sections, `fig:`, `tab:`, `eq:`, `alg:`, and `thm:`, `lem:`, `def:` for theorem-like environments.
+- A label repeats the name of the file it points to: `figures/overview.tex` is `fig:overview`, `tables/main-results.tex` is `tab:main-results`, `sections/method.tex` is `sec:method`.
+- Put `\label` right after `\caption`, or right after `\section`.
+- Refer with `\cref{...}`, and with `\Cref{...}` at the start of a sentence. Never type "Figure 3" or "Section 2" by hand.
+- Label only the equations the text refers to.
+
+## Citations
+
+- A cited work that is a noun in the sentence, its subject or its object, takes `\citet`: `\citet{vaswani2017attention} introduced the Transformer.`
+- A citation that supports a claim or a named thing takes `~\citep`, right after what it supports: `Transformers~\citep{vaswani2017attention} dominate ...`. The `~` keeps it on the same line.
+- Several works behind one claim share one `\citep{a,b,c}`.
+- Never make a parenthetical citation the noun of a sentence ("as shown in \citep{x}").
+- Author-year is the default. `\documentclass[numbers]{banglab}` switches to [1], and `\citet` and `\citep` need no change. Do not load natbib again.
+
+## Headings
+
+- `\section` and `\subsection` only. Below them, use a run-in `\paragraph{Heading.}`. The class warns when `\subsubsection` appears.
+- Headings in Title Case.
+
+## Figures and tables
+
+- Diagrams and plots are vector (TikZ, pgfplots or PDF). Raster images only for photos and screenshots.
+- Size against the column, `width=\linewidth`, never in absolute units.
+- Place floats with `[t]`. Use `figure*` and `table*` for anything wider than one column, so the paper also works with `[twocolumn]`.
+- Tables use booktabs (`\toprule`, `\midrule`, `\bottomrule`) and no vertical rules. Keep one number of decimals down a column. Mark the best entry with `\best{}` and the second with `\second{}`.
+- Charts use `chartpurple` for the method and `chartblue` for a baseline.
+
+## Mathematics
+
+- Named operators use `\operatorname{...}` or `\DeclareMathOperator` in `commands.tex`. Text in subscripts uses `\mathrm` (`x_{\mathrm{train}}`).
+- A displayed equation is part of its sentence and ends with the sentence's punctuation.
+- Notation is defined once as a macro in `commands.tex`, so a symbol changes in one place.
+
+## Text
+
+- One sentence per line in section files, so diffs and the Overleaf history show whole sentences.
+- `e.g.,` and `i.e.,` with a comma, `\%` for percent, `--` for ranges (`1--5`), and ``` ``quotes'' ``` for quotation marks.
+- `\emph` for emphasis, `\texttt` for code and identifiers, `\method{}` for the method's name.
+- No `\\`, `\vspace` or `\newpage` in running text to fix the layout.
+- Notes to co-authors use `\TODO{...}` or `\authornote{Name}{...}`. `\notesfalse` in `commands.tex` hides every note before submission.
+
+## Building
+
+- pdfLaTeX through `latexmk -pdf main.tex`, which is what Overleaf runs. Keep the `\pdfoutput=1` line at the top of `main.tex`.
+- A change is done when the build has no `^! ` lines and no undefined references or citations in `main.log`.
+- For arXiv, upload the generated `main.bbl` with the sources.

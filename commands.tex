@@ -1,0 +1,46 @@
+% commands.tex -- the packages and macros this paper adds to banglab.cls.
+%
+% The class already loads graphicx, booktabs, amsmath, amssymb, amsthm,
+% xcolor (dvipsnames, table), tcolorbox, natbib, hyperref, cleveref, caption
+% and subcaption. Do not load natbib or hyperref again, and use subcaption
+% rather than subfigure.
+
+\usepackage{multirow}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+% Names %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% The method's name, set once so a rename is one edit. Write \method{} in text.
+\newcommand{\method}{MethodName}
+
+% Mathematics %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+
+% Tables %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% The best entry of a column in bold, the second best underlined.
+\newcommand{\best}[1]{\textbf{#1}}
+\newcommand{\second}[1]{\underline{#1}}
+
+% Notes to co-authors %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \notesfalse hides every note, for the version that goes to arXiv.
+\newif\ifnotes
+\notestrue
+\newcommand{\TODO}[1]{\ifnotes{\sffamily\color{red}[TODO: #1]}\fi}
+\newcommand{\authornote}[2]{\ifnotes{\sffamily\color{udemblue}[#1: #2]}\fi}

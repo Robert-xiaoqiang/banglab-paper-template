@@ -1,0 +1,17 @@
+% Overview of the method: input, method, output and a feedback loop.
+\begin{tikzpicture}[
+    font=\sffamily\small,
+    stage/.style={rounded corners=5pt, minimum height=1.25cm, minimum width=3.3cm,
+      align=center, draw=milapurple!55, line width=0.6pt, fill=labtint},
+    core/.style={stage, fill=milapurple, draw=milapurple, text=white},
+    flow/.style={-latex, line width=0.8pt, draw=milapurple!70}]
+  \node[stage] (in)  at (0,0)   {\textbf{Input}\\[1pt]\footnotesize task and context};
+  \node[core]  (m)   at (4.6,0) {\textbf{\method{}}\\[1pt]\footnotesize the component that is new};
+  \node[stage] (out) at (9.2,0) {\textbf{Output}\\[1pt]\footnotesize answer and trace};
+  \node[stage, draw=udemblue!60, fill=udemblue!7, minimum width=4.2cm]
+    (fb) at (4.6,-1.85) {\textbf{Feedback}\\[1pt]\footnotesize reward, critique or memory};
+  \draw[flow] (in) -- (m);
+  \draw[flow] (m) -- (out);
+  \draw[flow, draw=udemblue!70] (out.south) |- (fb.east);
+  \draw[flow, draw=udemblue!70] (fb.north) -- (m.south);
+\end{tikzpicture}

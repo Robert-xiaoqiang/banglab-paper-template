@@ -1,0 +1,38 @@
+\section{Experiments}
+\label{sec:experiments}
+
+\subsection{Main Results}
+\label{sec:main-results}
+
+\Cref{tab:main-results} compares \method{} with three baselines on four benchmarks, and \cref{fig:benchmark-scores} plots the same scores against the strongest baseline.
+A results paragraph opens with its finding rather than with the table it comes from.
+
+\begin{table*}[t]
+  \centering
+  \caption{Main results on four benchmarks. The best score in each column is in bold and the second best is underlined. All numbers are placeholders.}
+  \label{tab:main-results}
+  \input{tables/main-results}
+\end{table*}
+
+\begin{figure}[t]
+  \centering
+  \input{figures/benchmark-scores}
+  \caption{Scores of \method{} and the strongest published baseline, from the placeholder numbers of \cref{tab:main-results}. The chart uses the class colours \texttt{chartpurple} and \texttt{chartblue}.}
+  \label{fig:benchmark-scores}
+\end{figure}
+
+\begin{takeaway}[Takeaway]
+State the finding in one or two sentences with the number that supports it, for example that \method{} improves the average score by 3.4 points over the strongest published baseline in \cref{tab:main-results}.
+\end{takeaway}
+
+\subsection{Prompts}
+\label{sec:prompts}
+
+The \texttt{promptbox} environment sets a prompt or a model output in Inconsolata, and verbatim content is allowed inside it.
+
+\begin{promptbox}[Prompt template for the judge model]
+You are grading a response to the task below.\\
+Task: \{task\}\\
+Response: \{response\}\\
+Reply with a score from 1 to 10 and one sentence of justification.
+\end{promptbox}

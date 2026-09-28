@@ -1,0 +1,26 @@
+\section{Method}
+\label{sec:method}
+
+\Cref{fig:overview} gives the overview of the method, from its input to its output and the feedback that closes the loop.
+Open the section with the modelling choice, then give each component its motivation, its design and the reason for that design.
+
+\begin{figure*}[t]
+  \centering
+  \input{figures/overview}
+  \caption{Overview of \method{}. The method node is filled in Mila purple and the feedback path is drawn in UdeM blue, the two brand colours the class defines as \texttt{milapurple} and \texttt{udemblue}.}
+  \label{fig:overview}
+\end{figure*}
+
+\subsection{Problem Setup}
+\label{sec:problem-setup}
+
+A displayed equation is part of the sentence around it and ends with that sentence's punctuation, as the attention operator of \citet{vaswani2017attention} does here,
+\begin{equation}
+  \operatorname{Attention}(Q, K, V) = \operatorname{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right) V,
+  \label{eq:attention}
+\end{equation}
+where $Q$, $K$ and $V$ are the query, key and value matrices and $d_k$ is the key dimension.
+Only equations the text refers to carry a label, as \cref{eq:attention} does.
+
+\paragraph{Run-in headings.}
+Below \verb|\subsection|, a paragraph heading such as this one takes the place of \verb|\subsubsection|, which the lab does not use.

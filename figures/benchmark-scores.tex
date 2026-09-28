@@ -1,0 +1,25 @@
+% Scores of the method and the strongest baseline, from tables/main-results.tex.
+\begin{tikzpicture}
+  \begin{axis}[
+      width=\linewidth, height=4.4cm, ybar=2pt, bar width=10pt,
+      ymin=0, ymax=80, ytick={0,20,40,60,80}, enlarge x limits=0.12,
+      /pgf/number format/assume math mode=true,
+      symbolic x coords={Bench-A,Bench-B,Bench-C,Bench-D,Average}, xtick=data,
+      axis lines*=left, axis line style={draw=labrule}, tick style={draw=none},
+      ymajorgrids, grid style={draw=black!8},
+      ticklabel style={font=\sffamily\scriptsize, text=labgrey},
+      ylabel={Score}, ylabel style={font=\sffamily\scriptsize, text=labgrey},
+      legend style={font=\sffamily\scriptsize, draw=none, fill=none,
+        at={(0.5,1.02)}, anchor=south, legend columns=2,
+        /tikz/every even column/.append style={column sep=12pt}},
+      area legend,
+      nodes near coords style={font=\sffamily\tiny, text=labink},
+      every node near coord/.append style={
+        /pgf/number format/.cd, fixed, fixed zerofill, precision=1, assume math mode=true}]
+    \addplot[fill=chartblue, draw=none]
+      coordinates {(Bench-A,49.5) (Bench-B,60.2) (Bench-C,37.1) (Bench-D,66.4) (Average,53.3)};
+    \addplot[fill=chartpurple, draw=none, nodes near coords]
+      coordinates {(Bench-A,53.1) (Bench-B,63.7) (Bench-C,41.8) (Bench-D,68.0) (Average,56.7)};
+    \legend{Strongest published baseline, \method{}}
+  \end{axis}
+\end{tikzpicture}
