@@ -4,7 +4,7 @@
 
 ## Quick start
 
-Copy the project (on Overleaf, Menu → Copy Project), then edit `main.tex` for the front matter and `sections/` for the text.
+Copy the project (on Overleaf, Menu → Copy Project), then edit `main.tex`, which holds the front matter and the text.
 
 ```latex
 \documentclass{banglab}          % [numbers] for [1] citations, [twocolumn] for two columns
@@ -18,7 +18,7 @@ Copy the project (on Overleaf, Menu → Copy Project), then edit `main.tex` for 
 \affiliation[2]{Universit\'e de Montr\'eal}
 \contribution[*]{Equal contribution}
 \contribution[\dagger]{Corresponding author}
-\abstract{\input{sections/abstract}}
+\abstract{One paragraph.}
 \date{\today}
 \correspondence{\email{you@mila.quebec}}
 \github{\href{https://github.com/org/repo}{github.com/org/repo}}
@@ -27,15 +27,13 @@ Copy the project (on Overleaf, Menu → Copy Project), then edit `main.tex` for 
 ## Layout
 
 ```
-main.tex          class options, front matter, and the order of the sections
+main.tex          class options, front matter and the whole text
 banglab.cls       the class, not edited per paper
-brand/            logos and icons the class draws
+banglab-*.pdf/png the logos and icon the class draws
 commands.tex      packages and macros this paper adds
-sections/         one file per section: abstract, introduction, related-work,
-                  method, experiments, conclusion, appendix
-figures/          drawings only (TikZ, pgfplots or PDF), captions stay in sections/
-tables/           tabular bodies only, captions stay in sections/
-bib/              references.bib
+references.bib    the bibliography
+figures/          drawings only (TikZ, pgfplots or PDF), captions stay in main.tex
+tables/           tabular bodies only, captions stay in main.tex
 AGENTS.md         writing and LaTeX conventions, for people and agents
 CLAUDE.md         points Claude Code at AGENTS.md
 ```
@@ -51,7 +49,7 @@ Author-year is the default. `\documentclass[numbers]{banglab}` switches to numbe
 | Command or environment | Use |
 | --- | --- |
 | `\author[marks]{Name}`, `\affiliation[mark]{...}`, `\contribution[mark]{...}` | Authors with affiliation and contribution marks, where `\dagger` also works as a mark |
-| `\abstract{\input{sections/abstract}}`, or `\begin{abstract}...\end{abstract}` before `\maketitle` | The abstract inside the card. The file form accepts anything, while the environment cannot hold `\verb` or a `#` or `%` inside a link |
+| `\abstract{...}`, or `\begin{abstract}...\end{abstract}` before `\maketitle` | The abstract inside the card. It cannot hold `\verb` or a `#` or `%` inside a link |
 | `\date`, `\correspondence`, `\github`, `\huggingface`, `\projectpage`, `\blogpost`, `\metadata[Key][\faIcon]{Value}` | Metadata lines with icons |
 | `\reportlabel{...}` | The label beside the wordmark, Preprint by default |
 | `\teaser{figure}{caption}` | An optional full-width figure under the card |
@@ -71,4 +69,4 @@ Overleaf's default pdfLaTeX builds `main.tex` as it is, and so does `latexmk -pd
 
 ## Brand assets
 
-`brand/logo-mila.pdf` is the vector wordmark served by mila.quebec in its own purple, and `brand/logo-udem.pdf` is the UdeM signature from the same site recoloured to UdeM blue, the colour umontreal.ca uses. `brand/icon-huggingface.png` is the icon for `\huggingface`.
+`banglab-logo-mila.pdf` is the vector wordmark served by mila.quebec in its own purple, and `banglab-logo-udem.pdf` is the UdeM signature from the same site recoloured to UdeM blue, the colour umontreal.ca uses. `banglab-icon-huggingface.png` is the icon for `\huggingface`.

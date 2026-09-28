@@ -85,8 +85,8 @@
 \RequirePackage[most]{tcolorbox}
 \RequirePackage{fontawesome5}
 
-% Class-owned files live in brand/ next to the class, whatever \graphicspath says.
-\newcommand\BL@asset[1]{brand/#1}
+% The class draws banglab-logo-*.pdf and banglab-icon-*.png, kept next to it.
+\newcommand\BL@asset[1]{banglab-#1}
 
 % Citations and links %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -203,9 +203,8 @@
 
 % The abstract works as a command in the preamble, \abstract{...}, and as the
 % usual environment before \maketitle. One that arrives after \maketitle is
-% printed where it stands, with a warning. The environment's body is stored in
-% a macro, so it cannot hold \verb or a # or % inside a link; the file form,
-% \abstract{\input{sections/abstract}}, reads the file only when printing.
+% printed where it stands, with a warning. Either way the body is stored in a
+% macro, so it cannot hold \verb or a # or % inside a link.
 \newif\ifBL@titledone
 \newcommand\BL@abstract{}
 \RequirePackage{environ}

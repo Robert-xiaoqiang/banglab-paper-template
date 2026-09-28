@@ -22,7 +22,12 @@
 \contribution[*]{Equal contribution}
 \contribution[\dagger]{Corresponding author}
 
-\abstract{\input{sections/abstract}}
+\abstract{%
+This template typesets arXiv preprints for BangLab at Université de Montréal and Mila.
+The front matter sits in one tinted card that opens with the BangLab wordmark and closes with the UdeM and Mila logos, headings and captions are set in Inter over a Latin Modern body, and every link in the metadata is clickable.
+The author, affiliation and metadata commands follow the Meta FAIR convention, so a paper written for the Meta FAIR, ServiceNow or ByteDance Seed class moves here by changing its \texttt{\textbackslash documentclass} line.
+Replace this paragraph with your abstract, one paragraph of about 150 to 250 words.
+}
 
 \date{\today}
 \correspondence{\email{first.author@mila.quebec}, \email{senior.author@umontreal.ca}}
@@ -38,16 +43,116 @@
 
 \maketitle
 
-\input{sections/introduction}
-\input{sections/related-work}
-\input{sections/method}
-\input{sections/experiments}
-\input{sections/conclusion}
+\section{Introduction}
+\label{sec:introduction}
+
+This sample paper is also the manual of the \labname{} arXiv class.
+The text lives in \texttt{main.tex}, drawings under \texttt{figures/}, table bodies under \texttt{tables/}, the bibliography in \texttt{references.bib}, and the macros a paper adds in \texttt{commands.tex}.
+\texttt{AGENTS.md} lists the conventions, and this section shows the two that matter most in running text.
+
+A citation that works as a noun, the subject or the object of the sentence, uses \verb|\citet|.
+For example, \citet{vaswani2017attention} introduced the Transformer.
+A citation that only supports a claim or a named thing uses \verb|~\citep|, placed right after what it supports.
+Large language models~\citep{brown2020language} can reason step by step when prompted to~\citep{wei2022chain}.
+Both commands keep working when the \texttt{numbers} class option switches the citations from author-year to numbers.
+
+Cross-references use \verb|\cref|, which prints the name with the number, so the text never types ``Figure'' or a number by hand.
+\Cref{sec:method} describes the method, \cref{fig:overview} gives its overview, and \cref{tab:main-results} reports the results.
+
+\section{Related Work}
+\label{sec:related-work}
+
+Group prior work by the question it answers rather than paper by paper.
+Each paragraph opens with the line of work it covers, cites that line as a group~\citep{brown2020language,wei2022chain}, names its representative methods, and closes with one or two sentences on how this paper differs.
+Two or three such paragraphs are usually enough.
+
+\section{Method}
+\label{sec:method}
+
+\Cref{fig:overview} gives the overview of the method, from its input to its output and the feedback that closes the loop.
+Open the section with the modelling choice, then give each component its motivation, its design and the reason for that design.
+
+\begin{figure*}[t]
+  \centering
+  \input{figures/overview}
+  \caption{Overview of \method{}. The method node is filled in Mila purple and the feedback path is drawn in UdeM blue, the two brand colours the class defines as \texttt{milapurple} and \texttt{udemblue}.}
+  \label{fig:overview}
+\end{figure*}
+
+\subsection{Problem Setup}
+\label{sec:problem-setup}
+
+A displayed equation is part of the sentence around it and ends with that sentence's punctuation, as the attention operator of \citet{vaswani2017attention} does here,
+\begin{equation}
+  \operatorname{Attention}(Q, K, V) = \operatorname{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right) V,
+  \label{eq:attention}
+\end{equation}
+where $Q$, $K$ and $V$ are the query, key and value matrices and $d_k$ is the key dimension.
+Only equations the text refers to carry a label, as \cref{eq:attention} does.
+
+\paragraph{Run-in headings.}
+Below \verb|\subsection|, a paragraph heading such as this one takes the place of \verb|\subsubsection|, which the lab does not use.
+
+\section{Experiments}
+\label{sec:experiments}
+
+\subsection{Main Results}
+\label{sec:main-results}
+
+\Cref{tab:main-results} compares \method{} with three baselines on four benchmarks, and \cref{fig:benchmark-scores} plots the same scores against the strongest baseline.
+A results paragraph opens with its finding rather than with the table it comes from.
+
+\begin{table*}[t]
+  \centering
+  \caption{Main results on four benchmarks. The best score in each column is in bold and the second best is underlined. All numbers are placeholders.}
+  \label{tab:main-results}
+  \input{tables/main-results}
+\end{table*}
+
+\begin{figure}[t]
+  \centering
+  \input{figures/benchmark-scores}
+  \caption{Scores of \method{} and the strongest published baseline, from the placeholder numbers of \cref{tab:main-results}. The chart uses the class colours \texttt{chartpurple} and \texttt{chartblue}.}
+  \label{fig:benchmark-scores}
+\end{figure}
+
+\begin{takeaway}[Takeaway]
+State the finding in one or two sentences with the number that supports it, for example that \method{} improves the average score by 3.4 points over the strongest published baseline in \cref{tab:main-results}.
+\end{takeaway}
+
+\subsection{Prompts}
+\label{sec:prompts}
+
+The \texttt{promptbox} environment sets a prompt or a model output in Inconsolata, and verbatim content is allowed inside it.
+
+\begin{promptbox}[Prompt template for the judge model]
+You are grading a response to the task below.\\
+Task: \{task\}\\
+Response: \{response\}\\
+Reply with a score from 1 to 10 and one sentence of justification.
+\end{promptbox}
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+Close with what the paper found and what it leaves open, in a paragraph or two.
+The appendix starts with \verb|\beginappendix|, which opens a new page, prints the appendix heading and lists the appendix sections, and \verb|\beginappendix*| leaves the list out.
 
 \bibliographystyle{plainnat}
-\bibliography{bib/references}
+\bibliography{references}
 
 \beginappendix
-\input{sections/appendix}
+\section{Porting a Paper from Another Template}
+\label{app:porting}
+
+A paper written for the Meta FAIR, ServiceNow or ByteDance Seed class compiles here after its \verb|\documentclass| line changes to \texttt{banglab}.
+The commands those classes define, including \verb|\checkdata|, \verb|\morelinks|, \verb|\beginappendix| and \verb|\nm|, keep their meaning.
+Author marks may be written as text or as maths symbols, since \verb|\dagger| and \verb|\ddagger| are mapped to their text forms inside the marks.
+
+\section{Brand Assets}
+\label{app:brand-assets}
+
+The two logo files next to the class are vector PDFs converted from the SVG files served by \url{https://mila.quebec}.
+The Mila wordmark keeps its own purple, \texttt{\#662E7D}, and the UdeM signature is set in UdeM blue, \texttt{\#0057AC}, the colour \url{https://www.umontreal.ca} uses.
 
 \end{document}

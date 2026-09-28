@@ -4,19 +4,18 @@ These rules hold for every paper built on `banglab.cls`, for the people writing 
 
 ## Files
 
-- `main.tex` holds the class options, the front matter and the order of the `\input` lines. Prose lives in `sections/`.
-- `sections/<name>.tex` holds one section per file, named by its content: `introduction.tex`, `related-work.tex`, `method.tex`. The appendix is `sections/appendix.tex`.
-- The abstract is `sections/abstract.tex`, read through `\abstract{\input{sections/abstract}}`. That file may hold anything a section can. The `abstract` environment also works, but it cannot hold `\verb`, or a `#` or `%` inside a link.
-- `figures/<name>.tex` (TikZ or pgfplots) or `figures/<name>.pdf` holds the drawing only. The `figure` environment, the caption and the label stay in the section file.
-- `tables/<name>.tex` holds the `tabular` only. The `table` environment, the caption and the label stay in the section file.
-- `bib/references.bib` is the one bibliography. Keys follow `<first author's surname><year><first title word>`, as in `vaswani2017attention`.
-- `commands.tex` holds the packages and macros the paper adds. Do not edit `banglab.cls` or `brand/` for one paper.
+- `main.tex` holds the class options, the front matter and all the text, sections and appendix included.
+- The abstract is `\abstract{...}` in the preamble, or the `abstract` environment before `\maketitle`. It cannot hold `\verb`, or a `#` or `%` inside a link.
+- `figures/<name>.tex` (TikZ or pgfplots) or `figures/<name>.pdf` holds the drawing only. The `figure` environment, the caption and the label stay in `main.tex`.
+- `tables/<name>.tex` holds the `tabular` only. The `table` environment, the caption and the label stay in `main.tex`.
+- `references.bib` is the one bibliography. Keys follow `<first author's surname><year><first title word>`, as in `vaswani2017attention`.
+- `commands.tex` holds the packages and macros the paper adds. Do not edit `banglab.cls` or the `banglab-*` logo files for one paper.
 - File names are lowercase words joined by hyphens and say what the file holds, never a number or a version (`main-results.tex`, not `table2.tex` or `results-v2.tex`).
 
 ## Labels and cross-references
 
 - Prefixes: `sec:` for sections and subsections, `app:` for appendix sections, `fig:`, `tab:`, `eq:`, `alg:`, and `thm:`, `lem:`, `def:` for theorem-like environments.
-- A label repeats the name of the file it points to: `figures/overview.tex` is `fig:overview`, `tables/main-results.tex` is `tab:main-results`, `sections/method.tex` is `sec:method`.
+- A figure or table label repeats its file name, so `figures/overview.tex` is `fig:overview` and `tables/main-results.tex` is `tab:main-results`. A section label is its heading in lowercase with hyphens, so Related Work is `sec:related-work`.
 - Put `\label` right after `\caption`, or right after `\section`.
 - Refer with `\cref{...}`, and with `\Cref{...}` at the start of a sentence. Never type "Figure 3" or "Section 2" by hand.
 - Label only the equations the text refers to.
@@ -50,7 +49,7 @@ These rules hold for every paper built on `banglab.cls`, for the people writing 
 
 ## Text
 
-- One sentence per line in section files, so diffs and the Overleaf history show whole sentences.
+- One sentence per line in `main.tex`, so diffs and the Overleaf history show whole sentences.
 - `e.g.,` and `i.e.,` with a comma, `\%` for percent, `--` for ranges (`1--5`), and ``` ``quotes'' ``` for quotation marks.
 - `\emph` for emphasis, `\texttt` for code and identifiers, `\method{}` for the method's name.
 - No `\\`, `\vspace` or `\newpage` in running text to fix the layout.
