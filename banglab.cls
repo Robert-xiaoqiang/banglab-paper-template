@@ -85,8 +85,8 @@
 \RequirePackage[most]{tcolorbox}
 \RequirePackage{fontawesome5}
 
-% The class draws banglab-logo-*.pdf and banglab-icon-*.png, kept next to it.
-\newcommand\BL@asset[1]{banglab-#1}
+% Logos and icons live in assets/ next to the class.
+\newcommand\BL@asset[1]{assets/#1}
 
 % Citations and links %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -258,13 +258,48 @@
 \newcommand\BL@spaced[1]{\textls[110]{\MakeUppercase{#1}}}
 \newcommand\BL@nohyphens{\hyphenpenalty=10000\exhyphenpenalty=10000\relax}
 
-% UdeM and Mila side by side, divided by a hairline; #1 is the logo height.
+% Logo library %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \definelogo{name}{file in assets/}{scale}: the scale sets the logo's height
+% as a multiple of the row height, so a two-line signature and a one-line
+% wordmark read at the same weight. \logos{udem,mila,mcgill} picks the logos
+% of a paper and their order; use only those of the authors' institutions.
+\newcommand\definelogo[3]{\csgdef{BL@logo@#1}{{#2}{#3}}}
+\definelogo{udem}{logo-udem.pdf}{1.18}
+\definelogo{mila}{logo-mila.pdf}{1.0}
+\definelogo{mcgill}{logo-mcgill.pdf}{1.05}
+\definelogo{polytechnique}{logo-polytechnique.png}{1.0}
+\definelogo{hec}{logo-hec.pdf}{0.5}
+\definelogo{cifar}{logo-cifar.pdf}{0.68}
+\definelogo{ibm}{logo-ibm.pdf}{0.86}
+\definelogo{qwen}{logo-qwen.pdf}{0.92}
+\definelogo{alibabacloud}{logo-alibabacloud.pdf}{0.52}
+\definelogo{servicenow}{logo-servicenow.pdf}{0.5}
+\definelogo{microsoft}{logo-microsoft.pdf}{0.72}
+\definelogo{nvidia}{logo-nvidia.pdf}{0.66}
+\definelogo{deepmind}{logo-deepmind.pdf}{0.7}
+\newcommand\BL@logos{udem,mila}
+\newcommand\logos[1]{\renewcommand\BL@logos{#1}}
+
+% The chosen logos side by side, centred on one axis and divided by hairlines;
+% #1 is the row height.
+\newlength\BL@rowheight
 \newcommand\BL@lockup[1]{%
-  \mbox{\includegraphics[height=1.18\dimexpr#1\relax]{\BL@asset{logo-udem.pdf}}%
-  \hspace{0.55\dimexpr#1\relax}%
-  {\color{labrule}\rule[-0.02\dimexpr#1\relax]{0.5pt}{1.04\dimexpr#1\relax}}%
-  \hspace{0.55\dimexpr#1\relax}%
-  \includegraphics[height=#1]{\BL@asset{logo-mila.pdf}}}}
+  \setlength\BL@rowheight{#1}%
+  \def\BL@logosep{}%
+  \mbox{\expandafter\forcsvlist\expandafter\BL@lockupitem\expandafter{\BL@logos}}}
+\newcommand\BL@lockupitem[1]{%
+  \ifcsdef{BL@logo@#1}{%
+    \BL@logosep
+    \expandafter\expandafter\expandafter\BL@drawlogo\csname BL@logo@#1\endcsname
+    \def\BL@logosep{\hspace{0.55\BL@rowheight}%
+      {\color{labrule}\rule[-0.02\BL@rowheight]{0.5pt}{1.04\BL@rowheight}}%
+      \hspace{0.55\BL@rowheight}}}%
+  {\ClassWarning{banglab}{Unknown logo `#1' in \string\logos. Define it with
+    \string\definelogo{#1}{file}{scale}}}}
+\newcommand\BL@drawlogo[2]{% file, scale
+  \raisebox{\dimexpr(\BL@rowheight-#2\BL@rowheight)/2\relax}{%
+    \includegraphics[height=#2\BL@rowheight]{\BL@asset{#1}}}}
 
 % "BangLab | TECHNICAL REPORT" at the top of the card.
 \newcommand\BL@labline{%
@@ -295,11 +330,21 @@
     \ifdefempty\BL@abstract{}{\vspace{5mm}%
       {\normalsize\setlength\parskip{0.5\baselineskip plus 2pt}\color{labink!90}\BL@abstract\par}}%
     \vspace{5mm}%
-    \begin{minipage}[b]{\dimexpr\linewidth-\wd\BL@lockupbox-0.6cm\relax}
-      \ifdefempty\BL@metadata{}{{\raggedright\sffamily\fontsize{8.5}{12.5}\selectfont
-        \BL@metadata\par}}%
-    \end{minipage}\hfill\usebox\BL@lockupbox
+    % The logos sit beside the metadata, or on their own row below it when
+    % they take more than half the card, shrunk to fit if they must.
+    \ifdim\wd\BL@lockupbox>0.5\linewidth
+      \ifdefempty\BL@metadata{}{\BL@printmetadata\vspace{4.5mm}}%
+      \hfill\ifdim\wd\BL@lockupbox>\linewidth
+        \resizebox{\linewidth}{!}{\usebox\BL@lockupbox}%
+      \else\usebox\BL@lockupbox\fi\par
+    \else
+      \begin{minipage}[b]{\dimexpr\linewidth-\wd\BL@lockupbox-0.6cm\relax}
+        \BL@printmetadata
+      \end{minipage}\hfill\usebox\BL@lockupbox
+    \fi
   \end{tcolorbox}}
+\newcommand\BL@printmetadata{\ifdefempty\BL@metadata{}{{\raggedright\sffamily
+  \fontsize{8.5}{12.5}\selectfont\BL@metadata\par}}}
 
 \newcommand\BL@printteaser{\ifdefempty\BL@teaser{}{%
   \vspace{5mm}{\captionsetup{type=figure}{\centering\BL@teaser\par}\vspace{1mm}%

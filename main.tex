@@ -10,6 +10,9 @@
 
 \title{Title of Your Paper in Two Lines at Most:\\ A Subtitle That Names the Method}
 \reportlabel{Technical Report}
+% Logos in the card, in order: udem, mila, mcgill, polytechnique, hec, cifar,
+% ibm, qwen, alibabacloud, servicenow, microsoft, nvidia, deepmind.
+\logos{udem,mila}
 
 \author[1,2,*]{First Author}
 \author[1,2,*]{Second Author}
@@ -152,7 +155,8 @@ Author marks may be written as text or as maths symbols, since \verb|\dagger| an
 \section{Brand Assets}
 \label{app:brand-assets}
 
-The two logo files next to the class are vector PDFs converted from the SVG files served by \url{https://mila.quebec}.
-The Mila wordmark keeps its own purple, \texttt{\#662E7D}, and the UdeM signature is set in UdeM blue, \texttt{\#0057AC}, the colour \url{https://www.umontreal.ca} uses.
+The logos live in \texttt{assets/}, and \verb|\logos{udem,mila,mcgill}| chooses which of them the title card shows and in which order.
+The library holds UdeM, Mila, McGill, Polytechnique Montréal, HEC Montréal, CIFAR, IBM, Qwen, Alibaba Cloud, ServiceNow, Microsoft, NVIDIA and Google DeepMind, and \verb|\definelogo{name}{file}{scale}| adds another.
+Show only the logos of the institutions the authors belong to.
 
 \end{document}

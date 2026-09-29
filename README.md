@@ -29,7 +29,7 @@ Copy the project (on Overleaf, Menu → Copy Project), then edit `main.tex`, whi
 ```
 main.tex          class options, front matter and the whole text
 banglab.cls       the class, not edited per paper
-banglab-*.pdf/png the logos and icon the class draws
+assets/           the logo library and icons the class draws
 commands.tex      packages and macros this paper adds
 references.bib    the bibliography
 figures/          drawings only (TikZ, pgfplots or PDF), captions stay in main.tex
@@ -52,6 +52,8 @@ Author-year is the default. `\documentclass[numbers]{banglab}` switches to numbe
 | `\abstract{...}`, or `\begin{abstract}...\end{abstract}` before `\maketitle` | The abstract inside the card. It cannot hold `\verb` or a `#` or `%` inside a link |
 | `\date`, `\correspondence`, `\github`, `\huggingface`, `\projectpage`, `\blogpost`, `\metadata[Key][\faIcon]{Value}` | Metadata lines with icons |
 | `\reportlabel{...}` | The label beside the wordmark, Preprint by default |
+| `\logos{udem,mila,mcgill}` | The logos in the card and their order, `udem,mila` by default |
+| `\definelogo{name}{file}{scale}` | Adds a logo from `assets/`, with its height as a multiple of the row |
 | `\teaser{figure}{caption}` | An optional full-width figure under the card |
 | `\labname` | The BangLab wordmark in running text |
 | `takeaway`, `promptbox` | A tinted box for a finding, and a box for prompts or model outputs |
@@ -67,6 +69,24 @@ A paper written for Meta FAIR's `fairmeta.cls`, ServiceNow's class or ByteDance 
 
 Overleaf's default pdfLaTeX builds `main.tex` as it is, and so does `latexmk -pdf main.tex` locally. XeLaTeX and LuaLaTeX also work. For arXiv, keep the `\pdfoutput=1` line at the top of `main.tex` and upload the generated `main.bbl` with the sources. The class was tested on TeX Live 2026 with the sample in one and two columns, with numbered citations, with an empty front matter, a 25-author list, a three-line title and the usual packages loaded after it.
 
-## Brand assets
+## Logos
 
-`banglab-logo-mila.pdf` is the vector wordmark served by mila.quebec in its own purple, and `banglab-logo-udem.pdf` is the UdeM signature from the same site recoloured to UdeM blue, the colour umontreal.ca uses. `banglab-icon-huggingface.png` is the icon for `\huggingface`.
+`\logos{...}` takes any of these names, in the order the card should show them. Show only the logos of the institutions the authors belong to, since every one of them is a trademark.
+
+| Name | Institution | Source |
+| --- | --- | --- |
+| `udem` | Université de Montréal | mila.quebec, recoloured to UdeM blue `#0057AC` |
+| `mila` | Mila | mila.quebec, in its own purple `#662E7D` |
+| `mcgill` | McGill University | mila.quebec, recoloured to McGill red `#ED1B2F` |
+| `polytechnique` | Polytechnique Montréal | Wikimedia Commons, CC0 (a 2400 px PNG, the only raster logo) |
+| `hec` | HEC Montréal | Wikimedia Commons, public domain |
+| `cifar` | CIFAR | mila.quebec, recoloured to near-black |
+| `ibm` | IBM | Wikimedia Commons, public domain |
+| `qwen` | Qwen, Alibaba | Wikimedia Commons, Apache 2.0 |
+| `alibabacloud` | Alibaba Cloud | Wikimedia Commons, public domain |
+| `servicenow` | ServiceNow | Wikimedia Commons, public domain |
+| `microsoft` | Microsoft | Wikimedia Commons, public domain |
+| `nvidia` | NVIDIA | Wikimedia Commons, Apache 2.0 |
+| `deepmind` | Google DeepMind | Wikimedia Commons, public domain |
+
+Every file is cropped to its content, and `\definelogo` sets its height so a two-line signature and a one-line wordmark read at the same weight. When the chosen logos take more than half the card, they move to their own row under the metadata. `assets/icon-huggingface.png` is the icon for `\huggingface`.
