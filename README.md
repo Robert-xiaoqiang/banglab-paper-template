@@ -11,7 +11,6 @@ Copy the project (on Overleaf, Menu → Copy Project), then edit `main.tex`, whi
 \input{commands}
 
 \title{Your Title}
-\reportlabel{Technical Report}
 \author[1,2,*]{First Author}
 \author[1,2,\dagger]{Senior Author}
 \affiliation[1]{Mila -- Quebec AI Institute}
@@ -51,7 +50,6 @@ Author-year is the default. `\documentclass[numbers]{banglab}` switches to numbe
 | `\author[marks]{Name}`, `\affiliation[mark]{...}`, `\contribution[mark]{...}` | Authors with affiliation and contribution marks, where `\dagger` also works as a mark |
 | `\abstract{...}`, or `\begin{abstract}...\end{abstract}` before `\maketitle` | The abstract inside the card. It cannot hold `\verb` or a `#` or `%` inside a link |
 | `\date`, `\correspondence`, `\github`, `\huggingface`, `\projectpage`, `\blogpost`, `\metadata[Key][\faIcon]{Value}` | Metadata lines with icons |
-| `\reportlabel{...}` | The label beside the wordmark, Preprint by default |
 | `\logos{udem,mila,mcgill}` | The logos in the card and their order, `udem,mila` by default |
 | `\definelogo{name}{file}{scale}` | Adds a logo from `assets/`, with its height as a multiple of the row |
 | `\teaser{figure}{caption}` | An optional full-width figure under the card |

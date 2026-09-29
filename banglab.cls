@@ -176,8 +176,6 @@
 
 \newcommand\BL@title{}
 \renewcommand\title[1]{\renewcommand\BL@title{#1}}
-\newcommand\BL@reportlabel{Preprint}
-\newcommand\reportlabel[1]{\renewcommand\BL@reportlabel{#1}}
 
 % The wordmark is set in type, the first part semibold and the second in
 % purple: \lab{Bang}{Lab}. \labname prints it in running text.
@@ -255,7 +253,6 @@
 
 % Title card %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\newcommand\BL@spaced[1]{\textls[110]{\MakeUppercase{#1}}}
 \newcommand\BL@nohyphens{\hyphenpenalty=10000\exhyphenpenalty=10000\relax}
 
 % Logo library %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -301,12 +298,8 @@
   \raisebox{\dimexpr(\BL@rowheight-#2\BL@rowheight)/2\relax}{%
     \includegraphics[height=#2\BL@rowheight]{\BL@asset{#1}}}}
 
-% "BangLab | TECHNICAL REPORT" at the top of the card.
-\newcommand\BL@labline{%
-  {\fontsize{11}{13}\selectfont\BL@wordmark}%
-  \ifdefempty\BL@reportlabel{}{\hspace{0.7em}%
-    {\color{labrule}\rule[-0.2em]{0.5pt}{1.05em}}\hspace{0.7em}%
-    {\sffamily\bfseries\scriptsize\color{labgrey}\BL@spaced{\BL@reportlabel}}}\par}
+% The wordmark alone opens the card.
+\newcommand\BL@labline{{\fontsize{11}{13}\selectfont\BL@wordmark}\par}
 
 \newsavebox\BL@lockupbox
 \newcommand\BL@card{%
