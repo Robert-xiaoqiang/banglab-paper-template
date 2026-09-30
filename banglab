@@ -1,18 +1,20 @@
 #!/usr/bin/env bash
 # banglab -- start papers from the BangLab template and keep their library files current.
 #
-#   ./banglab init   <paper-dir> [--version vX.Y.Z] [--force]
+#   ./banglab init   <paper-dir> [--version vX.Y.Z] [--force] [--no-commit]
 #       Copy the scaffold and the library of one release into a paper.
 #   ./banglab status <paper-dir>...
 #       Print each paper's release, how far it is behind, and any edited library file.
-#   ./banglab update <paper-dir> [--version vX.Y.Z] [--force]
+#   ./banglab update <paper-dir> [--version vX.Y.Z] [--force] [--no-commit]
 #       Replace a paper's library files with another release and commit the change.
 #
 # banglab-files.txt says which files are library (owned by the template, replaced on
 # update, never edited in a paper) and which are scaffold (copied once, then the
 # paper's own). A paper records its release and the hash of every library file in
 # banglab.lock. Releases are the v* tags of this repository; the newest is the default.
-# The tool commits inside a paper's git repository but never pushes.
+# The tool commits inside a paper's git repository but never pushes. Its git commands
+# touch only the paper directory, so a paper can be a subdirectory of a repository
+# others are working in; --no-commit leaves the files uncommitted.
 set -euo pipefail
 
 template=$(cd "$(dirname "$0")" && pwd)
@@ -88,6 +90,15 @@ write_lock() {
 
 in_git() { git -C "$1" rev-parse --is-inside-work-tree >/dev/null 2>&1; }
 
+# Commit every change under the paper directory, and nothing outside it: a paper can
+# sit in a subdirectory of a repository with other people's work in progress.
+commit_paper() {
+  local paper=$1 message=$2
+  git -C "$paper" add -A -- .
+  git -C "$paper" commit -q -m "$message" -- .
+  note "committed in $paper; push it when you are ready"
+}
+
 # Build a copy of the paper and print "errors=N pages=P", or say why it was not built.
 build_report() {
   local paper=$1 dir log
@@ -120,16 +131,17 @@ changelog_between() {
 }
 
 cmd_init() {
-  local paper="" version="" force=0 root file clash=()
+  local paper="" version="" force=0 commit=1 root file clash=()
   while (($#)); do
     case $1 in
       --version) version=${2:?--version needs a release such as v1.0.0}; shift 2 ;;
       --force) force=1; shift ;;
+      --no-commit) commit=0; shift ;;
       -*) die "init: unknown option $1" ;;
       *) [[ -z $paper ]] || die "init takes one paper directory"; paper=$1; shift ;;
     esac
   done
-  [[ -n $paper ]] || die "usage: ./banglab init <paper-dir> [--version vX.Y.Z] [--force]"
+  [[ -n $paper ]] || die "usage: ./banglab init <paper-dir> [--version vX.Y.Z] [--force] [--no-commit]"
   [[ -e $paper/banglab.lock ]] && die "$paper already has banglab.lock; use ./banglab update"
   version=${version:-$(latest_version)}
   root=$(unpack "$version")
@@ -147,10 +159,8 @@ cmd_init() {
   write_lock "$paper" "$version" "$(git -C "$template" rev-parse --short "$version^{commit}")" "$root"
   rm -rf "$root"
   note "started $paper from the template at $version"
-  if in_git "$paper"; then
-    git -C "$paper" add -A
-    git -C "$paper" commit -q -m "Start from the BangLab paper template $version"
-    note "committed in $paper; push it when you are ready"
+  if ((commit)) && in_git "$paper"; then
+    commit_paper "$paper" "Start from the BangLab paper template $version"
   fi
 }
 
@@ -173,22 +183,23 @@ cmd_status() {
 }
 
 cmd_update() {
-  local paper="" version="" force=0 current root file before after edited
+  local paper="" version="" force=0 commit=1 current root file before after edited
   while (($#)); do
     case $1 in
       --version) version=${2:?--version needs a release such as v1.1.0}; shift 2 ;;
       --force) force=1; shift ;;
+      --no-commit) commit=0; shift ;;
       -*) die "update: unknown option $1" ;;
       *) [[ -z $paper ]] || die "update takes one paper directory"; paper=$1; shift ;;
     esac
   done
-  [[ -n $paper ]] || die "usage: ./banglab update <paper-dir> [--version vX.Y.Z] [--force]"
+  [[ -n $paper ]] || die "usage: ./banglab update <paper-dir> [--version vX.Y.Z] [--force] [--no-commit]"
   [[ -f $paper/banglab.lock ]] || die "$paper has no banglab.lock; start papers with ./banglab init"
   current=$(lock_field "$paper" version)
   version=${version:-$(latest_version)}
   [[ $current == "$version" ]] && { note "$paper is already at $version"; return; }
-  if in_git "$paper" && [[ -n $(git -C "$paper" status --porcelain) ]]; then
-    die "$paper has uncommitted changes; commit them first so the update is its own commit"
+  if ((commit)) && in_git "$paper" && [[ -n $(git -C "$paper" status --porcelain -- .) ]]; then
+    die "$paper has uncommitted changes; commit them first so the update is its own commit, or pass --no-commit"
   fi
   edited=$(edited_files "$paper" | tr '\n' ' ')
   if [[ -n $edited ]] && ((!force)); then
@@ -211,10 +222,8 @@ cmd_update() {
   after=$(build_report "$paper")
   echo "== Build before: $before"
   echo "== Build after:  $after"
-  if in_git "$paper"; then
-    git -C "$paper" add -A
-    git -C "$paper" commit -q -m "Update the BangLab template from $current to $version"
-    note "committed in $paper; push it when you are ready"
+  if ((commit)) && in_git "$paper"; then
+    commit_paper "$paper" "Update the BangLab template from $current to $version"
   fi
 }
 
@@ -222,5 +231,5 @@ case ${1:-} in
   init) shift; cmd_init "$@" ;;
   status) shift; cmd_status "$@" ;;
   update) shift; cmd_update "$@" ;;
-  *) sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
+  *) sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
 esac
