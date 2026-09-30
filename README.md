@@ -55,22 +55,24 @@ The template is a versioned library, not a folder to copy. A paper keeps an uned
 
 `./banglab` runs from a clone of this repository.
 
+Every repository, the template's and each paper's, flows the same way: **local ↔ GitHub ↔ Overleaf**, on the branch `master`. GitHub is the source of truth and holds the release tags. Overleaf is linked to it by Overleaf's GitHub sync, which is manual: in Overleaf, Menu → GitHub has one button that pushes Overleaf's edits to GitHub and one that pulls GitHub's commits into Overleaf. Nothing pushes to Overleaf directly. Overleaf cannot link an existing project to an existing repository, so an Overleaf project is always created from the repository with New Project → Import from GitHub.
+
 | Step | Command |
 | --- | --- |
-| Start a paper | Create a blank Overleaf project, clone it, then `./banglab init <clone> --force` (the blank project's stub `main.tex` is replaced) and push the clone. A paper that lives only in git needs no `--force`. |
+| Start a paper | Create an empty GitHub repository for the paper and clone it. Run `./banglab init <clone>`, then `git push -u origin master` in the clone. In Overleaf, New Project → Import from GitHub and pick the repository. |
 | See where papers stand | `./banglab status <paper>...` prints each paper's release, how many releases it is behind, and any library file someone edited. |
-| Update a paper | `./banglab update <paper>` prints the changelog since the paper's release, warns on a layout-changing one, builds the paper before and after, replaces the library files and commits. Push the paper yourself once the build looks right. `--version vX.Y.Z` picks a release other than the newest. |
+| Update a paper | First push the co-authors' Overleaf edits to GitHub (Overleaf, Menu → GitHub) and `git pull` in the clone. `./banglab update <paper>` then prints the changelog since the paper's release, warns on a layout-changing one, builds the paper before and after, replaces the library files and commits. Once the build looks right, `git push`, and pull the change into Overleaf from its GitHub menu. `--version vX.Y.Z` picks a release other than the newest. |
 
 Releases that do not change the layout can go into a paper at any time. A layout-changing release moves text, so take it in a draft, not in the last two weeks before a deadline and not after an arXiv version is out.
 
-`init` and `update` commit in the paper's repository and never push, so a paper's Overleaf project changes only when you push it.
+`init` and `update` commit in the paper's repository and never push, so a paper's GitHub repository and Overleaf project change only when you push and pull.
 
 ## Releasing a template change
 
 1. Edit the library files, and bump the version in `\ProvidesClass`.
 2. Build the sample in TeX Live 2025 and 2026 until it has no errors, warnings or bad boxes.
 3. Add an entry to `CHANGELOG.md`, marked layout-changing when text moves on the page.
-4. Commit, tag the release (`git tag v1.1.0`), and push `main` and the tag to GitHub, then `main` to the template's Overleaf project, which mirrors it for colleagues who only use Overleaf.
+4. Commit, tag the release (`git tag v1.1.0`), and push both to GitHub with `git push origin master v1.1.0`. Then pull the change into the template's Overleaf project from its GitHub menu, for colleagues who only use Overleaf.
 5. Run `./banglab status` over the lab's papers to see which ones to update.
 
 ## Typesetting
