@@ -71,19 +71,20 @@ Releases that do not change the layout can go into a paper at any time. A layout
 
 ## Releasing a template change
 
-A maintainer's clone has two remotes: `origin`, the GitHub repository, and `overleaf`, the template's Overleaf project, with a push mapping so `git push overleaf` sends `master` to Overleaf's `main` and never a tag:
+A maintainer's clone has two remotes: `origin`, the GitHub repository, and `overleaf-mirror`, the template's Overleaf project. The mirror maps `master` to Overleaf's `main`, never takes a tag, and has its push URL disabled, so routine pushes reach GitHub only and the Overleaf copy is updated only when someone decides it should be:
 
 ```
 git clone git@github.com:Robert-xiaoqiang/banglab-paper-template.git
-git remote add overleaf https://git@git.overleaf.com/6ab8b19e2cf029892db9ea89
-git config remote.overleaf.push refs/heads/master:refs/heads/main
-git config remote.overleaf.tagOpt --no-tags
+git remote add overleaf-mirror https://git@git.overleaf.com/6ab8b19e2cf029892db9ea89
+git config remote.overleaf-mirror.push refs/heads/master:refs/heads/main
+git config remote.overleaf-mirror.tagOpt --no-tags
+git remote set-url --push overleaf-mirror no-push-until-asked
 ```
 
 1. Edit the library files, and bump the version in `\ProvidesClass`.
 2. Build the sample in TeX Live 2025 and 2026 until it has no errors, warnings or bad boxes.
 3. Add an entry to `CHANGELOG.md`, marked layout-changing when text moves on the page.
-4. Commit, tag the release (`git tag v1.1.0`), push both to GitHub with `git push origin master v1.1.0`, then mirror `master` to the template's Overleaf project with `git push overleaf`.
+4. Commit, tag the release (`git tag v1.1.0`) and push both to GitHub with `git push origin master v1.1.0`. When the Overleaf copy should catch up, push it once by URL, `git push https://git@git.overleaf.com/6ab8b19e2cf029892db9ea89 master:main`, which leaves the disabled push URL in place.
 5. Run `./banglab status` over the lab's papers to see which ones to update.
 
 ## Typesetting
