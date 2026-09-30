@@ -1,4 +1,5 @@
 % commands.tex -- the packages and macros this paper adds to banglab.cls.
+% This file belongs to the paper: the template tool never touches it.
 %
 % The class already loads graphicx, booktabs, amsmath, amssymb, amsthm,
 % xcolor (dvipsnames, table), tcolorbox, natbib, hyperref, cleveref, caption
@@ -31,16 +32,8 @@
 \theoremstyle{remark}
 \newtheorem{remark}{Remark}
 
-% Tables %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% The best entry of a column in bold, the second best underlined.
-\newcommand{\best}[1]{\textbf{#1}}
-\newcommand{\second}[1]{\underline{#1}}
-
 % Notes to co-authors %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% \notesfalse hides every note, for the version that goes to arXiv.
-\newif\ifnotes
-\notestrue
-\newcommand{\TODO}[1]{\ifnotes{\sffamily\color{red}[TODO: #1]}\fi}
-\newcommand{\authornote}[2]{\ifnotes{\sffamily\color{udemblue}[#1: #2]}\fi}
+% The class provides \TODO{...}, \authornote{Name}{...}, \best and \second.
+% Uncomment the next line for the version that goes to arXiv.
+% \notesfalse

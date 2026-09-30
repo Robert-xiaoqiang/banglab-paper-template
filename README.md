@@ -4,7 +4,7 @@
 
 ## Quick start
 
-Copy the project (on Overleaf, Menu → Copy Project), then edit `main.tex`, which holds the front matter and the text.
+Start a paper with `./banglab init` (see Using the template in a paper below), then edit `main.tex`, which holds the front matter and the text.
 
 ```latex
 \documentclass{banglab}          % [numbers] for [1] citations, [10pt] or [12pt], [twocolumn]
@@ -26,18 +26,52 @@ Copy the project (on Overleaf, Menu → Copy Project), then edit `main.tex`, whi
 ## Layout
 
 ```
-main.tex          class options, front matter and the whole text
-banglab.cls       the class, not edited per paper
+                  library: owned by the template, replaced by ./banglab update
+banglab.cls       the class
 assets/           the logo library and icons the class draws
+AGENTS.md         writing and LaTeX conventions, for people and agents
+banglab.lock      in a paper only: its release and the hash of every library file
+
+                  scaffold: copied once by ./banglab init, then the paper's own
+main.tex          class options, front matter and the whole text
 commands.tex      packages and macros this paper adds
 references.bib    the bibliography
 figures/          drawings only (TikZ, pgfplots or PDF), captions stay in main.tex
 tables/           tabular bodies only, captions stay in main.tex
-AGENTS.md         writing and LaTeX conventions, for people and agents
 CLAUDE.md         points Claude Code at AGENTS.md
+
+                  template only, never copied into a paper
+banglab           the tool that starts and updates papers
+banglab-files.txt which files are library and which are scaffold
+CHANGELOG.md      what each release changed
+README.md         this file
 ```
 
 A label repeats the file it points to, so `figures/overview.tex` is `\label{fig:overview}` and `tables/main-results.tex` is `\label{tab:main-results}`. `AGENTS.md` has the rest: label prefixes, `\citet` against `~\citep`, headings down to `\subsection`, and the table and figure rules.
+
+## Using the template in a paper
+
+The template is a versioned library, not a folder to copy. A paper keeps an unedited copy of the library files and records their release in `banglab.lock`, so a fix in the template reaches every paper by one command, and nobody has to remember which paper runs which class. The one rule that makes this work is that **a paper never edits a library file**. It changes what they do from its own `commands.tex` (`\renewcommand`, `\definelogo`, `\hypersetup`), and anything that needs more than that goes into the template as a release.
+
+`./banglab` runs from a clone of this repository.
+
+| Step | Command |
+| --- | --- |
+| Start a paper | Create a blank Overleaf project, clone it, then `./banglab init <clone> --force` (the blank project's stub `main.tex` is replaced) and push the clone. A paper that lives only in git needs no `--force`. |
+| See where papers stand | `./banglab status <paper>...` prints each paper's release, how many releases it is behind, and any library file someone edited. |
+| Update a paper | `./banglab update <paper>` prints the changelog since the paper's release, warns on a layout-changing one, builds the paper before and after, replaces the library files and commits. Push the paper yourself once the build looks right. `--version vX.Y.Z` picks a release other than the newest. |
+
+Releases that do not change the layout can go into a paper at any time. A layout-changing release moves text, so take it in a draft, not in the last two weeks before a deadline and not after an arXiv version is out.
+
+`init` and `update` commit in the paper's repository and never push, so a paper's Overleaf project changes only when you push it.
+
+## Releasing a template change
+
+1. Edit the library files, and bump the version in `\ProvidesClass`.
+2. Build the sample in TeX Live 2025 and 2026 until it has no errors, warnings or bad boxes.
+3. Add an entry to `CHANGELOG.md`, marked layout-changing when text moves on the page.
+4. Commit, tag the release (`git tag v1.1.0`), and push `main` and the tag to GitHub, then `main` to the template's Overleaf project, which mirrors it for colleagues who only use Overleaf.
+5. Run `./banglab status` over the lab's papers to see which ones to update.
 
 ## Typesetting
 

@@ -16,7 +16,7 @@
 % The conventions for papers built on this class are in AGENTS.md.
 
 \NeedsTeXFormat{LaTeX2e}[2020/10/01]
-\ProvidesClass{banglab}[2026/09/28 v1.0 BangLab arXiv preprint]
+\ProvidesClass{banglab}[2026/09/30 v1.0.0 BangLab arXiv preprint]
 
 % Options %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -430,6 +430,20 @@
     \startcontents[appendix]%
     \printcontents[appendix]{}{1}[2]{}%
     \vspace{4mm}}}
+
+% Lab helpers %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% They live in the class so every paper gets their fixes with the template.
+% A paper that wants them otherwise uses \renewcommand in commands.tex.
+% \best and \second mark the best and second-best entry of a table column.
+\newcommand\best[1]{\textbf{#1}}
+\newcommand\second[1]{\underline{#1}}
+% Notes to co-authors; \notesfalse in commands.tex hides every one of them
+% for the version that goes to arXiv.
+\newif\ifnotes
+\notestrue
+\newcommand\TODO[1]{\ifnotes{\sffamily\color{red}[TODO: #1]}\fi}
+\newcommand\authornote[2]{\ifnotes{\sffamily\color{udemblue}[#1: #2]}\fi}
 
 % Boxes %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

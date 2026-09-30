@@ -9,7 +9,7 @@ These rules hold for every paper built on `banglab.cls`, for the people writing 
 - `figures/<name>.tex` (TikZ or pgfplots) or `figures/<name>.pdf` holds the drawing only. The `figure` environment, the caption and the label stay in `main.tex`.
 - `tables/<name>.tex` holds the `tabular` only. The `table` environment, the caption and the label stay in `main.tex`.
 - `references.bib` is the one bibliography. Keys follow `<first author's surname><year><first title word>`, as in `vaswani2017attention`.
-- `commands.tex` holds the packages and macros the paper adds. Do not edit `banglab.cls` or `assets/` for one paper.
+- `commands.tex` holds the packages and macros the paper adds. Never edit the library files (`banglab.cls`, `assets/`, this file) in a paper: `./banglab update` replaces them, and `banglab.lock` records their hashes so an edit is caught. Change their behaviour from `commands.tex`, or propose the change to the template.
 - `assets/` holds the logos and icons the class draws. `\logos{udem,mila,...}` in `main.tex` picks the ones the title card shows. Show only the logos of the institutions the authors belong to.
 - File names are lowercase words joined by hyphens and say what the file holds, never a number or a version (`main-results.tex`, not `table2.tex` or `results-v2.tex`).
 

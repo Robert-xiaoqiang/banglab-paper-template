@@ -1,0 +1,24 @@
+# Which files of this template a paper receives. Read by ./banglab.
+#
+# [library] files belong to the template. Every paper keeps an unedited copy,
+# ./banglab update replaces them with a newer release, and a paper changes what
+# they do from its own commands.tex instead of editing them.
+#
+# [scaffold] files are copied once by ./banglab init and then belong to the
+# paper. The tool never touches them again.
+#
+# An entry ending in / stands for every file under that directory.
+
+[library]
+banglab.cls
+AGENTS.md
+assets/
+
+[scaffold]
+main.tex
+commands.tex
+references.bib
+figures/
+tables/
+CLAUDE.md
+.gitignore
