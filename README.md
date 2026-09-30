@@ -1,13 +1,13 @@
 # BangLab paper template
 
-`banglab.cls` typesets arXiv preprints for BangLab at Université de Montréal and Mila. The front matter sits in one tinted card that opens with the BangLab wordmark and closes with the UdeM and Mila logos, and the wordmark and logos appear on page one only. Headings, caption labels and the title block are set in Inter, the closest free match to Mila's typeface, over a Latin Modern body. The sample paper in this project doubles as the manual.
+`banglab.cls` typesets arXiv preprints for BangLab at Université de Montréal and Mila. The front matter sits in one tinted card that opens with the BangLab wordmark and closes with the UdeM and Mila logos, and the wordmark and logos appear on page one only. Headings, caption labels and the title block are set in Inter, the closest free match to Mila's typeface, over an 11pt XCharter body. The sample paper in this project doubles as the manual.
 
 ## Quick start
 
 Copy the project (on Overleaf, Menu → Copy Project), then edit `main.tex`, which holds the front matter and the text.
 
 ```latex
-\documentclass{banglab}          % [numbers] for [1] citations, [twocolumn] for two columns
+\documentclass{banglab}          % [numbers] for [1] citations, [10pt] or [12pt], [twocolumn]
 \input{commands}
 
 \title{Your Title}
@@ -38,6 +38,21 @@ CLAUDE.md         points Claude Code at AGENTS.md
 ```
 
 A label repeats the file it points to, so `figures/overview.tex` is `\label{fig:overview}` and `tables/main-results.tex` is `\label{tab:main-results}`. `AGENTS.md` has the rest: label prefixes, `\citet` against `~\citep`, headings down to `\subsection`, and the table and figure rules.
+
+## Typesetting
+
+The body settings follow the class that Google DeepMind's reports use, which DeepSeek, MiniMax, Xiaomi and NVIDIA copied for their own report classes. Of the twenty-four reports measured for this template, those five set 11pt, four of them in XCharter. The NeurIPS-derived templates (Kimi, GLM, InternVL and others) set 10pt Times and the Meta-derived ones 10pt Computer Modern, both over lines of 95 to 118 characters.
+
+| Setting | Value |
+| --- | --- |
+| Body and maths | XCharter 11pt with `newtxmath`, 13.6pt leading (10pt and 12pt are class options) |
+| Brand elements | Inter, the title block, headings, caption labels and page numbers |
+| Code | Inconsolata, scaled to Charter's x-height |
+| Page | US Letter, 2.5 cm margins, a 16.6 cm line of about 95 characters |
+| Paragraphs | No indent, half a line between paragraphs |
+| Page breaks | No single line of a paragraph left alone at the head or foot of a page, and a takeaway box never split |
+| Headings | Inter, ragged-right, on LaTeX's standard size steps so any maths font scales with them |
+| Floats | May fill 85% of a text page, so figure-heavy reports get fewer float-only pages |
 
 ## Citations
 

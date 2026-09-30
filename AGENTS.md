@@ -33,6 +33,7 @@ These rules hold for every paper built on `banglab.cls`, for the people writing 
 
 - `\section` and `\subsection` only. Below them, use a run-in `\paragraph{Heading.}`. The class warns when `\subsubsection` appears.
 - Headings in Title Case.
+- Maths in a title or heading goes through `\texorpdfstring{$\pi$}{pi}`, so the PDF bookmarks get plain text.
 
 ## Figures and tables
 

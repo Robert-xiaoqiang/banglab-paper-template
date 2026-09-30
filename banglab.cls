@@ -2,14 +2,15 @@
 %
 % The front matter sits in one tinted card that opens with the BangLab wordmark
 % and closes with the UdeM and Mila logos. Inter carries the brand (title
-% block, headings, caption labels), Latin Modern sets the body and the maths.
+% block, headings, caption labels), XCharter sets the body and the maths.
 % The author, affiliation, abstract and metadata commands keep the names of
 % Meta FAIR's fairmeta.cls, so a paper written for that class, or for
 % ServiceNow's or ByteDance Seed's, compiles here after changing only
 % \documentclass.
 %
-%   \documentclass{banglab}              % (Author, Year) citations, the default
+%   \documentclass{banglab}              % 11pt, (Author, Year) citations
 %   \documentclass[numbers]{banglab}     % [1] citations
+%   \documentclass[10pt]{banglab}        % 10pt or 12pt instead of 11pt
 %   \documentclass[twocolumn]{banglab}   % any article option passes through
 %
 % The conventions for papers built on this class are in AGENTS.md.
@@ -22,8 +23,17 @@
 \RequirePackage{kvoptions}
 \SetupKeyvalOptions{family=BL,prefix=BL@}
 \DeclareBoolOption{numbers}
+% 11pt unless the paper asks for another size, as in the Google DeepMind report
+% class and the DeepSeek, MiniMax, Xiaomi and NVIDIA classes built on it. On a
+% 16.6 cm line it gives the same 95 characters as 10pt Latin Modern at a larger,
+% more open size.
+\newcommand\BL@size{11pt}
+\DeclareVoidOption{10pt}{\renewcommand\BL@size{10pt}}
+\DeclareVoidOption{11pt}{\renewcommand\BL@size{11pt}}
+\DeclareVoidOption{12pt}{\renewcommand\BL@size{12pt}}
 \DeclareDefaultOption{\PassOptionsToClass{\CurrentOption}{article}}
 \ProcessKeyvalOptions*
+\PassOptionsToClass{\BL@size}{article}
 \LoadClass{article}
 
 % Layout %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -34,29 +44,62 @@
 \RequirePackage{etoolbox}
 \RequirePackage{parskip}
 % Room for long \texttt identifiers before a line is left overfull.
-\setlength\emergencystretch{1.5em}
+\setlength\emergencystretch{3em}
+% No first or last line of a paragraph alone at the foot or head of a page.
+\clubpenalty=10000
+\widowpenalty=10000
+\displaywidowpenalty=10000
+\raggedbottom
+% Floats may fill more of a text page before LaTeX gives them a page of their
+% own, so a figure-heavy report has fewer half-empty float pages.
+\renewcommand\topfraction{0.85}
+\renewcommand\dbltopfraction{0.85}
+\renewcommand\bottomfraction{0.6}
+\renewcommand\textfraction{0.1}
+\renewcommand\floatpagefraction{0.75}
+\renewcommand\dblfloatpagefraction{0.75}
+\setcounter{topnumber}{3}
+\setcounter{totalnumber}{4}
 
 % Fonts %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Latin Modern for body and maths, Inter (the closest free match to TT Norms
-% Pro, Mila's own typeface) for the brand, Inconsolata for code. inter.sty
-% redefines \rmdefault as well as \sfdefault, so the roman is saved and put back.
+% XCharter for body and maths, the pairing of the Google DeepMind report class
+% and the DeepSeek, MiniMax and Xiaomi classes built on it. Charter keeps its
+% weight on screen where Latin Modern's hairlines thin out. amsmath, amssymb
+% and amsthm come before newtxmath, which replaces the AMS symbol fonts and
+% defines \openbox only when amsthm has not. Inter (the
+% closest free match to TT Norms Pro, Mila's own typeface) carries the brand,
+% and Inconsolata sets code. inter.sty redefines \rmdefault as well as
+% \sfdefault, so the roman is saved and put back.
 \RequirePackage[T1]{fontenc}
-\RequirePackage{lmodern}
+\RequirePackage{amsmath}
+\RequirePackage{amssymb}
+\RequirePackage{amsthm}
+\RequirePackage{XCharter}
+\RequirePackage[xcharter, bigdelims, vvarbb]{newtxmath}
 \let\BL@rmdefault\rmdefault
 \RequirePackage[scale=0.92, semibold]{inter}
 \let\rmdefault\BL@rmdefault
 \renewcommand*\familydefault{\rmdefault}
+% Under XeLaTeX and LuaLaTeX newtxmath asks for the roman in OT1, which the
+% OpenType XCharter does not have; operator names would fall back to cmr.
+\ifTUTeX
+  \SetSymbolFont{operators}{normal}{TU}{\rmdefault}{m}{n}
+  \SetSymbolFont{operators}{bold}{TU}{\rmdefault}{b}{n}
+\fi
 % zi4 has no shapes for the Unicode engines, which get the OpenType files.
 \RequirePackage{iftex}
 \ifTUTeX
   \RequirePackage{fontspec}
-  \setmonofont{Inconsolatazi4-Regular.otf}[BoldFont=Inconsolatazi4-Bold.otf, Scale=0.95]
+  \setmonofont{Inconsolatazi4-Regular.otf}[BoldFont=Inconsolatazi4-Bold.otf, Scale=1.02]
 \else
-  \RequirePackage[varqu, varl, scaled=0.95]{zi4}
+  \RequirePackage[varqu, varl, scaled=1.02]{zi4}
 \fi
 \RequirePackage{textcomp}
 \RequirePackage{microtype}
+% Every font scales to any size, so fixed-size maths fonts a paper loads
+% (mathrsfs, bbm) never warn about a substituted size.
+\RequirePackage{anyfontsize}
 
 % Colours %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -76,12 +119,10 @@
 
 % Packages %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% amsthm comes before cleveref so theorem references get their names.
+% amsthm (loaded with the fonts) comes before cleveref, so theorem references
+% get their names.
 \RequirePackage{graphicx}
 \RequirePackage{booktabs}
-\RequirePackage{amsmath}
-\RequirePackage{amssymb}
-\RequirePackage{amsthm}
 \RequirePackage[most]{tcolorbox}
 \RequirePackage{fontawesome5}
 
@@ -97,7 +138,9 @@
 \else
   \RequirePackage[round, authoryear]{natbib}
 \fi
-\renewcommand\bibfont{\small}
+% References are ragged-right in two columns, where author lists and URLs
+% would otherwise stretch the line.
+\renewcommand\bibfont{\small\if@twocolumn\raggedright\fi}
 \setlength\bibsep{3pt plus 1pt}
 
 \RequirePackage{hyperref}
@@ -108,14 +151,15 @@
 % Headings %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \RequirePackage{titlesec}
+% Headings are ragged-right, never stretched to the column.
 \titleformat{\section}
-  {\sffamily\bfseries\fontsize{14}{17}\selectfont\color{labink}}
+  {\raggedright\sffamily\bfseries\fontsize{14.4}{17}\selectfont\color{labink}}
   {\color{milapurple}\thesection}{0.7em}{}
 \titleformat{\subsection}
-  {\sffamily\bfseries\fontsize{11.5}{14}\selectfont\color{labink}}
+  {\raggedright\sffamily\bfseries\fontsize{12}{14.5}\selectfont\color{labink}}
   {\color{milapurple}\thesubsection}{0.65em}{}
 \titleformat{\subsubsection}
-  {\sffamily\bfseries\normalsize\color{labink}}
+  {\raggedright\sffamily\bfseries\normalsize\color{labink}}
   {\color{milapurple}\thesubsubsection}{0.6em}{}
 \titleformat{\paragraph}[runin]
   {\sffamily\bfseries\normalsize\color{labink}}{\theparagraph}{0.6em}{}
@@ -299,7 +343,7 @@
     \includegraphics[height=#2\BL@rowheight]{\BL@asset{#1}}}}
 
 % The wordmark alone opens the card.
-\newcommand\BL@labline{{\fontsize{11}{13}\selectfont\BL@wordmark}\par}
+\newcommand\BL@labline{{\fontsize{10.95}{13}\selectfont\BL@wordmark}\par}
 
 \newsavebox\BL@lockupbox
 \newcommand\BL@card{%
@@ -311,10 +355,10 @@
     {\raggedright
       \BL@labline
       \vspace{4mm}%
-      {\BL@nohyphens\sffamily\bfseries\fontsize{20.5}{25.5}\selectfont
+      {\BL@nohyphens\sffamily\bfseries\fontsize{20.74}{25.5}\selectfont
         \color{labink}\BL@title\par}%
       \ifdefempty\BL@authors{}{\vspace{3.5mm}{\sffamily\bfseries
-        \fontsize{10.5}{15}\selectfont\color{labink}\BL@authors\par}}%
+        \fontsize{10.95}{15}\selectfont\color{labink}\BL@authors\par}}%
       \ifdefempty\BL@affiliations{}{\vspace{1.4mm}{\sffamily
         \fontsize{9}{12.5}\selectfont\color{labgrey}\BL@affiliations\par}}%
       \ifdefempty\BL@contributions{}{\vspace{0.8mm}{\sffamily
@@ -337,7 +381,7 @@
     \fi
   \end{tcolorbox}}
 \newcommand\BL@printmetadata{\ifdefempty\BL@metadata{}{{\raggedright\sffamily
-  \fontsize{8.5}{12.5}\selectfont\BL@metadata\par}}}
+  \fontsize{9}{13}\selectfont\BL@metadata\par}}}
 
 \newcommand\BL@printteaser{\ifdefempty\BL@teaser{}{%
   \vspace{5mm}{\captionsetup{type=figure}{\centering\BL@teaser\par}\vspace{1mm}%
@@ -380,7 +424,7 @@
 % list of the appendix sections; \beginappendix* leaves the list out.
 \NewDocumentCommand\beginappendix{s}{%
   \clearpage\appendix
-  {\sffamily\bfseries\fontsize{20}{24}\selectfont\color{labink}Appendix\par}%
+  {\sffamily\bfseries\fontsize{20.74}{24}\selectfont\color{labink}Appendix\par}%
   \vspace{1.5mm}{\color{milapurple}\rule{\linewidth}{0.6pt}}\par\vspace{2mm}%
   \IfBooleanF{#1}{%
     \startcontents[appendix]%
@@ -390,7 +434,9 @@
 % Boxes %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % \begin{takeaway}[Title] ... \end{takeaway}: a finding the reader should keep.
-\newtcolorbox{takeaway}[1][Takeaway]{enhanced, breakable, arc=5pt,
+% It is short, so it moves to the next page whole rather than leave its title
+% behind.
+\newtcolorbox{takeaway}[1][Takeaway]{enhanced, arc=5pt,
   frame hidden, boxrule=0pt, colback=labtint,
   left=11pt, right=11pt, top=7pt, bottom=7pt, before skip=8pt, after skip=8pt,
   before upper={{\sffamily\bfseries\small\color{milapurple}#1\par}\vspace{2pt}}}
