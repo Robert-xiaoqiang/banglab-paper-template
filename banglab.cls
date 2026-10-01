@@ -1,8 +1,11 @@
 % banglab.cls -- arXiv preprint class of BangLab, Universite de Montreal and Mila.
 %
 % The front matter sits in one tinted card that opens with the BangLab wordmark
-% and closes with the UdeM and Mila logos. Inter carries the brand (title
+% and closes with the logos main.tex names. Inter carries the brand (title
 % block, headings, caption labels), XCharter sets the body and the maths.
+% The class itself names no graphics file: arXiv's file check keeps a graphic
+% only when a .tex file of the paper names its path, so the logos are
+% \includegraphics lines in main.tex and the class sizes and arranges them.
 % The author, affiliation, abstract and metadata commands keep the names of
 % Meta FAIR's fairmeta.cls, so a paper written for that class, or for
 % ServiceNow's or ByteDance Seed's, compiles here after changing only
@@ -16,7 +19,7 @@
 % The conventions for papers built on this class are in AGENTS.md.
 
 \NeedsTeXFormat{LaTeX2e}[2020/10/01]
-\ProvidesClass{banglab}[2026/09/30 v1.0.0 BangLab arXiv preprint]
+\ProvidesClass{banglab}[2026/09/30 v2.0.0 BangLab arXiv preprint]
 
 % Options %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -81,6 +84,7 @@
 \RequirePackage[scale=0.92, semibold]{inter}
 \let\rmdefault\BL@rmdefault
 \renewcommand*\familydefault{\rmdefault}
+\RequirePackage{iftex}
 % Under XeLaTeX and LuaLaTeX newtxmath asks for the roman in OT1, which the
 % OpenType XCharter does not have; operator names would fall back to cmr.
 \ifTUTeX
@@ -88,7 +92,6 @@
   \SetSymbolFont{operators}{bold}{TU}{\rmdefault}{b}{n}
 \fi
 % zi4 has no shapes for the Unicode engines, which get the OpenType files.
-\RequirePackage{iftex}
 \ifTUTeX
   \RequirePackage{fontspec}
   \setmonofont{Inconsolatazi4-Regular.otf}[BoldFont=Inconsolatazi4-Bold.otf, Scale=1.02]
@@ -126,8 +129,13 @@
 \RequirePackage[most]{tcolorbox}
 \RequirePackage{fontawesome5}
 
-% Logos and icons live in assets/ next to the class.
-\newcommand\BL@asset[1]{assets/#1}
+% The class never names a graphics file. graphicx's command is kept under a
+% private name, bound at class load, so a paper's wrapper of \includegraphics
+% (adjustbox's export option, say) neither applies to the title card nor breaks
+% it. Convention for this file: never write \includegraphics immediately
+% followed by a brace group outside a comment, since arXiv scans the class text
+% for that pattern and reports whatever path it finds there as a file.
+\NewCommandCopy\BL@includegraphics\includegraphics
 
 % Citations and links %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -284,8 +292,22 @@
 \renewcommand\date[1]{\ifblank{#1}{}{\metadata[Date][\faCalendar*]{#1}}}
 \newcommand\correspondence[1]{\metadata[Correspondence][\faEnvelope[regular]]{#1}}
 \newcommand\github[1]{\metadata[Code][\faGithub]{#1}}
-\newcommand\huggingface[1]{\metadata[Hugging Face][\raisebox{-0.15em}{%
-  \includegraphics[height=1em]{\BL@asset{icon-huggingface.png}}}]{#1}}
+% The Hugging Face mark is drawn rather than included from a file, so a paper
+% that uses \huggingface ships no icon. tikz comes with tcolorbox.
+\definecolor{BL@hfyellow}{HTML}{FFD21E}
+\definecolor{BL@hforange}{HTML}{FF9D0B}
+\definecolor{BL@hfink}{HTML}{32343D}
+\newcommand\BL@hficon{\raisebox{-0.15em}{\begin{tikzpicture}[x=1em, y=1em, baseline=0pt,
+    every path/.style={}, every node/.style={}]
+  \useasboundingbox (-0.54,0) rectangle (0.54,1);
+  \fill[BL@hfyellow] (0,0.5) circle[radius=0.47];
+  \draw[BL@hfink, line width=0.045em, line cap=round] (-0.28,0.60) arc[start angle=200, end angle=340, radius=0.11];
+  \draw[BL@hfink, line width=0.045em, line cap=round] (0.08,0.60) arc[start angle=200, end angle=340, radius=0.11];
+  \fill[BL@hfink] (-0.26,0.40) arc[start angle=180, end angle=360, radius=0.26] -- cycle;
+  \fill[BL@hforange, opacity=0.9] (-0.36,0.42) circle[radius=0.06] (0.36,0.42) circle[radius=0.06];
+  \fill[BL@hfyellow, draw=BL@hforange, line width=0.03em] (-0.44,0.22) circle[radius=0.14] (0.44,0.22) circle[radius=0.14];
+\end{tikzpicture}}}
+\newcommand\huggingface[1]{\metadata[Hugging Face][\BL@hficon]{#1}}
 \newcommand\projectpage[1]{\metadata[Project page][\faGlobe]{#1}}
 \newcommand\blogpost[1]{\metadata[Blog][\faPenNib]{#1}}
 
@@ -301,53 +323,112 @@
 
 % Logo library %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% \definelogo{name}{file in assets/}{scale}: the scale sets the logo's height
-% as a multiple of the row height, so a two-line signature and a one-line
-% wordmark read at the same weight. \logos{udem,mila,mcgill} picks the logos
-% of a paper and their order; use only those of the authors' institutions.
-\newcommand\definelogo[3]{\csgdef{BL@logo@#1}{{#2}{#3}}}
-\definelogo{udem}{logo-udem.pdf}{1.18}
-\definelogo{mila}{logo-mila.pdf}{1.0}
-\definelogo{mcgill}{logo-mcgill.pdf}{1.05}
-\definelogo{polytechnique}{logo-polytechnique.png}{1.0}
-\definelogo{hec}{logo-hec.pdf}{0.5}
-\definelogo{cifar}{logo-cifar.pdf}{0.68}
-\definelogo{ibm}{logo-ibm.pdf}{0.86}
-\definelogo{qwen}{logo-qwen.pdf}{0.92}
-\definelogo{alibabacloud}{logo-alibabacloud.pdf}{0.52}
-\definelogo{servicenow}{logo-servicenow.pdf}{0.5}
-\definelogo{microsoft}{logo-microsoft.pdf}{0.72}
-\definelogo{nvidia}{logo-nvidia.pdf}{0.66}
-\definelogo{deepmind}{logo-deepmind.pdf}{0.7}
-\newcommand\BL@logos{udem,mila}
-\newcommand\logos[1]{\renewcommand\BL@logos{#1}}
+% The title card's logos are written in main.tex, one \includegraphics with its
+% literal path per logo, in the order the card shows them:
+%
+%   \logos{\includegraphics{assets/logo-udem.pdf}\includegraphics{assets/logo-mila.pdf}}
+%
+% arXiv's file check reads the paper's .tex files for literal paths and cannot
+% follow a macro, so the paths stand in main.tex and the class names no file.
+% The body runs once, at \maketitle, with \includegraphics rebound to
+% \BL@logoitem, which looks the path up in the registry for the logo's height,
+% sizes it against the row and draws a hairline between neighbours. Outside the
+% body \includegraphics is graphicx's.
+%
+% \definelogo{name}{path}{scale}: the scale sets the logo's height as a multiple
+% of the row height, so a two-line signature and a one-line wordmark read at the
+% same weight. The path is the one written in \includegraphics, character for
+% character. A paper registers a logo of its own from commands.tex, with the
+% file under figures/: \definelogo{acme}{figures/logo-acme.pdf}{0.8}. The name
+% only serves the error message that spells out the v1 form's replacement.
+\newcommand\definelogo[3]{\csgdef{BL@logo@#1}{#2}\csgdef{BL@logoscale@#2}{#3}}
+\definelogo{udem}{assets/logo-udem.pdf}{1.18}
+\definelogo{mila}{assets/logo-mila.pdf}{1.0}
+\definelogo{mcgill}{assets/logo-mcgill.pdf}{1.05}
+\definelogo{polytechnique}{assets/logo-polytechnique.png}{1.0}
+\definelogo{hec}{assets/logo-hec.pdf}{0.5}
+\definelogo{cifar}{assets/logo-cifar.pdf}{0.68}
+\definelogo{ibm}{assets/logo-ibm.pdf}{0.86}
+\definelogo{qwen}{assets/logo-qwen.pdf}{0.92}
+\definelogo{alibabacloud}{assets/logo-alibabacloud.pdf}{0.52}
+\definelogo{servicenow}{assets/logo-servicenow.pdf}{0.5}
+\definelogo{microsoft}{assets/logo-microsoft.pdf}{0.72}
+\definelogo{nvidia}{assets/logo-nvidia.pdf}{0.66}
+\definelogo{deepmind}{assets/logo-deepmind.pdf}{0.7}
 
-% The chosen logos side by side, centred on one axis and divided by hairlines;
-% #1 is the row height.
+% \logos stores its body unexpanded; \includegraphics in it is only a token
+% until \BL@lockup runs the body.
+\newcommand\BL@logos{}
+\newif\ifBL@logosgiven
+\newcommand\logos[1]{\renewcommand\BL@logos{#1}\BL@logosgiventrue}
+\newcount\BL@logocount
 \newlength\BL@rowheight
+\newsavebox\BL@lockupbox
+
+% Sets \BL@lockupbox to the chosen logos side by side, centred on one axis and
+% divided by hairlines; #1 is the row height. The rebinding is local to the
+% box. A body that is blank apart from comments means no logos. A body with
+% content that drew no logo is the v1 form \logos{udem,mila}, or one that
+% reaches \includegraphics only through another macro: an error that spells
+% the line to write, and an empty box.
 \newcommand\BL@lockup[1]{%
   \setlength\BL@rowheight{#1}%
-  \def\BL@logosep{}%
-  \mbox{\expandafter\forcsvlist\expandafter\BL@lockupitem\expandafter{\BL@logos}}}
-\newcommand\BL@lockupitem[1]{%
-  \ifcsdef{BL@logo@#1}{%
-    \BL@logosep
-    \expandafter\expandafter\expandafter\BL@drawlogo\csname BL@logo@#1\endcsname
-    \def\BL@logosep{\hspace{0.55\BL@rowheight}%
-      {\color{labrule}\rule[-0.02\BL@rowheight]{0.5pt}{1.04\BL@rowheight}}%
-      \hspace{0.55\BL@rowheight}}}%
-  {\ClassWarning{banglab}{Unknown logo `#1' in \string\logos. Define it with
-    \string\definelogo{#1}{file}{scale}}}}
-\newcommand\BL@drawlogo[2]{% file, scale
-  \raisebox{\dimexpr(\BL@rowheight-#2\BL@rowheight)/2\relax}{%
-    \includegraphics[height=#2\BL@rowheight]{\BL@asset{#1}}}}
+  \global\BL@logocount\z@
+  \sbox\BL@lockupbox{%
+    \RenewCommandCopy\includegraphics\BL@logoitem
+    \ignorespaces\BL@logos\unskip}%
+  \ifBL@logosgiven\else
+    \ClassWarningNoLine{banglab}{No \string\logos\space in the preamble, so the
+      title card shows no logos. Write \string\logos{} to say so}%
+  \fi
+  \expandafter\ifblank\expandafter{\BL@logos}{}{\ifnum\BL@logocount=\z@
+    \BL@logosnameserror
+    \sbox\BL@lockupbox{}%
+  \fi}}
+\newcommand\BL@logosnameserror{%
+  \def\BL@logosfix{}%
+  \expandafter\forcsvlist\expandafter\BL@logosfixitem\expandafter{\BL@logos}%
+  \ClassError{banglab}{\string\logos{\BL@logos} drew no logo: it is the v1 list
+    of names, or its body does not call \string\includegraphics\space itself.
+    Since v2.0.0 every logo is an \string\includegraphics\space with its literal
+    path. Write \string\logos{\BL@logosfix}}{The sample main.tex shows the form,
+    and the README lists the library's paths.}}
+\newcommand\BL@logosfixitem[1]{\ifcsdef{BL@logo@\detokenize{#1}}%
+  {\eappto\BL@logosfix{\string\includegraphics\string{\csuse{BL@logo@\detokenize{#1}}\string}}}%
+  {\eappto\BL@logosfix{\string\includegraphics\string{<path of \detokenize{#1}>\string}}}}
+
+% What \includegraphics means inside the \logos body: #1 a star and #2 options
+% the author wrote, which the class ignores with a warning, #3 the path. The
+% registry is keyed by the path as written, the same string arXiv resolves.
+\NewDocumentCommand\BL@logoitem{s o m}{%
+  \IfValueT{#2}{\ClassWarning{banglab}{The class sizes the title-card logos;
+    the options [#2] on the logo #3 are ignored. Change its height with
+    \string\definelogo{name}{#3}{scale} in commands.tex}}%
+  \ifcsdef{BL@logoscale@#3}{\letcs\BL@logoscale{BL@logoscale@#3}}{%
+    \def\BL@logoscale{1}%
+    \ClassWarning{banglab}{No height registered for the logo #3, drawn at the
+      row height. A library logo is written with the path the README lists,
+      exactly; another is registered with \string\definelogo{name}{#3}{scale}
+      in commands.tex}}%
+  \ifdim\BL@logoscale\BL@rowheight>\z@
+    \ifnum\BL@logocount>\z@\BL@logosep\fi
+    \raisebox{\dimexpr(\BL@rowheight-\BL@logoscale\BL@rowheight)/2\relax}{%
+      \BL@includegraphics[height=\BL@logoscale\BL@rowheight]{#3}}%
+    \global\advance\BL@logocount\@ne
+  \else
+    \ClassWarning{banglab}{The logo #3 has the height scale \BL@logoscale, so
+      it is not drawn}%
+  \fi
+  \ignorespaces}
+\newcommand\BL@logosep{\hspace{0.55\BL@rowheight}%
+  {\color{labrule}\rule[-0.02\BL@rowheight]{0.5pt}{1.04\BL@rowheight}}%
+  \hspace{0.55\BL@rowheight}}
 
 % The wordmark alone opens the card.
 \newcommand\BL@labline{{\fontsize{10.95}{13}\selectfont\BL@wordmark}\par}
 
-\newsavebox\BL@lockupbox
 \newcommand\BL@card{%
-  \sbox\BL@lockupbox{\BL@lockup{7.2mm}}%
+  \BL@lockup{7.2mm}%
   \begin{tcolorbox}[enhanced, frame hidden, arc=9pt, boxrule=0pt, colback=labtint,
       left=0.75cm, right=0.75cm, top=0.6cm, bottom=0.6cm,
       before skip=0pt, after skip=0pt]

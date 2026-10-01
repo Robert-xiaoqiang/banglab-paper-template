@@ -9,9 +9,12 @@
 % Front matter %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \title{Title of Your Paper in Two Lines at Most:\\ A Subtitle That Names the Method}
-% Logos in the card, in order: udem, mila, mcgill, polytechnique, hec, cifar,
-% ibm, qwen, alibabacloud, servicenow, microsoft, nvidia, deepmind.
-\logos{udem,mila}
+% Logos in the card, in order, one \includegraphics per logo with the path as the
+% library lists it (README, Logos): assets/logo-udem.pdf, assets/logo-mila.pdf,
+% assets/logo-mcgill.pdf, assets/logo-polytechnique.png, assets/logo-hec.pdf,
+% assets/logo-cifar.pdf, assets/logo-ibm.pdf, assets/logo-qwen.pdf, and so on.
+% The class sizes them; arXiv keeps a graphic only when main.tex names its file.
+\logos{\includegraphics{assets/logo-udem.pdf}\includegraphics{assets/logo-mila.pdf}}
 
 \author[1,2,*]{First Author}
 \author[1,2,*]{Second Author}
@@ -154,8 +157,10 @@ Author marks may be written as text or as maths symbols, since \verb|\dagger| an
 \section{Brand Assets}
 \label{app:brand-assets}
 
-The logos live in \texttt{assets/}, and \verb|\logos| chooses which of them the title card shows and in which order.
-The library holds UdeM, Mila, McGill, Polytechnique Montréal, HEC Montréal, CIFAR, IBM, Qwen, Alibaba Cloud, ServiceNow, Microsoft, NVIDIA and Google DeepMind, and \verb|\definelogo{name}{file}{scale}| adds another.
+The logos live in \texttt{assets/}, and \verb|\logos| in the preamble lists the ones the title card shows, in order, each as an \verb|\includegraphics| with its literal path.
+The paths are written out because arXiv keeps a graphics file only when a \texttt{.tex} file of the paper names it; a file the class alone referred to would be deleted as unused.
+The library holds UdeM, Mila, McGill, Polytechnique Montréal, HEC Montréal, CIFAR, IBM, Qwen, Alibaba Cloud, ServiceNow, Microsoft, NVIDIA and Google DeepMind, and \verb|\definelogo{name}{path}{scale}| in \texttt{commands.tex} registers a logo of the paper's own, kept under \texttt{figures/}.
 Show only the logos of the institutions the authors belong to.
+\verb|./banglab arxiv| builds the arXiv zip and runs arXiv's own file check over it before anything is written.
 
 \end{document}

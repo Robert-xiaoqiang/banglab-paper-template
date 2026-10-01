@@ -10,3 +10,5 @@
 *.synctex.gz
 *.toc
 /main.pdf
+# Written by ./banglab arxiv. Delete this line to track the zip, for download from Overleaf.
+/arxiv_submission.zip

@@ -1,0 +1,530 @@
+#!/usr/bin/env python3
+"""banglab-arxiv -- build and verify a paper's arXiv submission zip.
+
+  ./banglab arxiv <paper-dir> [--out <zip>] [--keep] [--no-preflight]
+  ./banglab arxiv --setup-preflight
+
+The paper is compiled the way arXiv compiles it (pdflatex, bibtex, pdflatex
+again) with TeX's recorder on, so the files the build read are known exactly.
+Those files, plus the generated main.bbl, are staged under their relative paths
+and zipped. Before zipping, the stage is checked the way arXiv's Check Files
+step reads it, where a file no .tex names literally is marked unused and deleted:
+first with arXiv's own parser when it is installed (--setup-preflight puts it in
+a .preflight/ virtualenv next to this script), and always with a built-in
+emulation of the same rule. The zip is then unpacked in a directory with no path
+back to the paper and compiled again; the page count must match and every
+shipped graphic must appear in that log. Nothing is written until every check
+passes, and the tool never commits.
+
+Python 3 standard library only; needs pdflatex and bibtex on PATH, and texlua
+for arXiv's parser.
+"""
+import argparse
+import hashlib
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+import zipfile
+
+MAIN = "main"
+TEMPLATE = os.path.dirname(os.path.realpath(__file__))
+BUILD_EXT = (".aux", ".out", ".ptc", ".toc", ".lof", ".lot", ".log", ".fls", ".fdb_latexmk",
+             ".blg", ".nav", ".snm", ".vrb", ".bcf", ".run.xml", ".synctex.gz", ".synctex")
+NEVER_SHIP = {"banglab.lock", "AGENTS.md", "CLAUDE.md", ".gitignore", "Makefile",
+              "build_submission.sh", "collect_deps.py", "arxiv_submission.zip", "README.md",
+              MAIN + ".bbl", MAIN + ".pdf"}   # main.bbl is taken from the fresh build, never from the paper
+NEVER_SHIP_DIRS = {".git", "arxiv_building", ".writer"}
+GRAPHIC_EXT = (".pdf", ".png", ".jpg", ".jpeg", ".eps")
+ARXIV_NAME = re.compile(r"[A-Za-z0-9_+\-.,=/]+")
+PDFOUTPUT = re.compile(r"\\pdfoutput\s*=\s*1")
+# How arXiv's parser classifies include commands: image commands are followed in
+# .tex, .sty and .cls files, the others in .tex and .sty only. Each kind resolves
+# a name without extension against its own extensions.
+IMAGE_CMDS = ("includegraphics", "includegraphics*", "includepdf", "epsfig", "psfig", "epsfbox")
+TEX_CMDS = ("input", "include", "InputIfFileExists", "subfile", "import", "includestandalone")
+STY_CMDS = ("usepackage", "RequirePackage")
+CLS_CMDS = ("documentclass", "LoadClass")
+ASIS_CMDS = ("lstinputlisting", "verbatiminput")
+ALL_CMDS = IMAGE_CMDS + TEX_CMDS + STY_CMDS + CLS_CMDS + ASIS_CMDS
+REF_ANY = re.compile(r"\\(" + "|".join(re.escape(c) for c in ALL_CMDS) + r")\s*(?:\[[^\]]*\])?\s*\{([^}]*)\}")
+REF_IMG = re.compile(r"\\(" + "|".join(re.escape(c) for c in IMAGE_CMDS) + r")\s*(?:\[[^\]]*\])?\s*\{([^}]*)\}")
+ADDPLOT = re.compile(r"\\addplot\+?\s*(?:\[[^\]]*\])?\s*table\s*(?:\[[^\]]*\])?\s*\{([^}]*)\}")
+GRAPHICSPATH = re.compile(r"\\graphicspath\s*\{((?:\s*\{[^}]*\}\s*)+)\}")
+TEX_ERROR = re.compile(r"^(?:! |[^\s:]+\.(?:tex|cls|sty|bbl|def|ltx|clo|fd):\d+: )")
+
+fails, warns = [], []
+
+
+def fail(msg):
+    fails.append(msg)
+    print("FAIL  " + msg)
+
+
+def warn(msg):
+    warns.append(msg)
+    print("warn  " + msg)
+
+
+def say(msg):
+    print("\n==> " + msg)
+
+
+def strip_comments(text):
+    text = re.sub(r"\\begin\{comment\}.*?\\end\{comment\}", "", text, flags=re.S)
+    text = re.sub(r"\\iffalse.*?\\fi", "", text, flags=re.S)
+    return re.sub(r"(?<!\\)%.*", "", text)
+
+
+def strip_verbatim(text):
+    """Drop what TeX prints literally, so a \\TODO shown as code is not a note."""
+    text = re.sub(r"\\begin\{(verbatim|lstlisting|minted|promptbox)\*?\}.*?\\end\{\1\*?\}", "", text, flags=re.S)
+    text = re.sub(r"\\verb\*?(.)(.*?)\1", "", text)
+    return text
+
+
+def comments_only(text):
+    return "\n".join(m.group(0) for m in re.finditer(r"(?<!\\)%.*", text))
+
+
+def read(path):
+    with open(path, encoding="utf-8", errors="ignore") as fh:
+        return fh.read()
+
+
+def sha256(path):
+    with open(path, "rb") as fh:
+        return hashlib.sha256(fh.read()).hexdigest()
+
+
+def version_tuple(v):
+    return tuple(int(x) for x in v.lstrip("v").split("."))
+
+
+def tex_env(cwd):
+    env = dict(os.environ)
+    env.pop("TEXINPUTS", None)
+    env["TEXMFHOME"] = "/nonexistent"   # arXiv has TeX Live and nothing of ours; a personal tree must not rescue the build
+    env["BIBINPUTS"] = cwd + ":"
+    env["max_print_line"] = "10000"     # one log line per message, so paths are not wrapped
+    return env
+
+
+def tex_trees():
+    """The TeX distribution directories a build may read from without shipping anything."""
+    roots = []
+    for var in ("TEXMFROOT", "SELFAUTOPARENT", "SELFAUTODIR", "TEXMFDIST", "TEXMFMAIN", "TEXMFSYSVAR",
+                "TEXMFVAR", "TEXMFSYSCONFIG", "TEXMFCONFIG", "TEXMFLOCAL"):
+        out = subprocess.run(["kpsewhich", "-var-value", var], capture_output=True, text=True).stdout.strip()
+        if out:
+            roots.append(os.path.realpath(out))
+    return roots
+
+
+def run(cwd, args, out_name):
+    with open(os.path.join(cwd, out_name), "w") as out:
+        return subprocess.run(args, cwd=cwd, env=tex_env(cwd), stdout=out, stderr=subprocess.STDOUT).returncode
+
+
+def pdflatex(cwd, out_name, recorder=False):
+    args = ["pdflatex", "-interaction=nonstopmode", "-file-line-error"]
+    if recorder:
+        args.append("-recorder")
+    return run(cwd, args + [MAIN + ".tex"], out_name)
+
+
+def check_log(log_path, what, expect_pages=None):
+    log = read(log_path)
+    errs = [l for l in log.splitlines() if TEX_ERROR.match(l)]
+    if errs:
+        fail(f"{what}: TeX errors: " + " | ".join(errs[:3]))
+    for pat, name in ((r"Citation .* undefined", "undefined citations"),
+                      (r"Reference .* undefined", "undefined cross-references"),
+                      (r"File `[^']*' not found", "a file was not found"),
+                      (r"No file " + MAIN + r"\.bbl", "main.bbl missing")):
+        m = re.search(pat, log)
+        if m:
+            fail(f"{what}: {name}: " + m.group(0))
+    for m in re.finditer(r"Class banglab (?:Warning|Error): (.*)", log):
+        msg = m.group(1).strip()
+        if msg.startswith("\\subsubsection used"):
+            warn(f"{what}: {msg}")   # a convention, not a defect of the PDF
+        else:
+            fail(f"{what}: the class reports a problem with the paper: " + msg)
+    m = re.findall(r"Output written on " + MAIN + r"\.pdf \((\d+) pages?", log)
+    pages = int(m[-1]) if m else None
+    if pages is None:
+        fail(f"{what}: no PDF written")
+    elif expect_pages is not None and pages != expect_pages:
+        fail(f"{what}: {pages} pages, the reference build had {expect_pages}")
+    return log, pages
+
+
+def compile_full(cwd):
+    pdflatex(cwd, "pass1.out", recorder=True)
+    aux = os.path.join(cwd, MAIN + ".aux")
+    if os.path.isfile(aux) and re.search(r"\\bibdata\{", read(aux)):
+        with open(os.path.join(cwd, "bibtex.out"), "w") as out:
+            subprocess.run(["bibtex", MAIN], cwd=cwd, env=tex_env(cwd), stdout=out, stderr=subprocess.STDOUT)
+        bib = read(os.path.join(cwd, "bibtex.out"))
+        bad = [l for l in bib.splitlines()
+               if "didn't find a database entry" in l or "couldn't open" in l
+               or "I found no \\bibdata" in l or "I found no \\bibstyle" in l]
+        if bad:
+            fail("bibtex: " + "; ".join(bad)[:400])
+    pdflatex(cwd, "pass2.out")
+    pdflatex(cwd, "pass3.out", recorder=True)
+    if "Rerun" in read(os.path.join(cwd, MAIN + ".log")):
+        pdflatex(cwd, "pass4.out", recorder=True)
+
+
+def preflight_python():
+    """The interpreter that can import arXiv's parser, or None."""
+    for cand in (os.environ.get("BANGLAB_PREFLIGHT_PYTHON"), os.path.join(TEMPLATE, ".preflight", "bin", "python")):
+        if cand and os.path.isfile(cand):
+            if subprocess.run([cand, "-c", "import tex2pdf_tools.preflight"], capture_output=True).returncode == 0:
+                return cand
+    return None
+
+
+PREFLIGHT_RUNNER = r'''
+import glob, json, os, sys
+from tex2pdf_tools.preflight import generate_preflight_response
+d = sys.argv[1]
+pf = json.loads(generate_preflight_response(d, json=True))
+adj = {}
+for t in pf.get("tex_files", []):
+    refs = adj.setdefault(t.get("filename"), [])
+    for k in ("used_tex_files", "used_other_files", "used_bib_files"):
+        refs.extend(r for r in t.get(k, []) if r)
+roots = [t["filename"] for t in pf.get("detected_toplevel_files", [])]
+used, stack = set(), list(roots)
+while stack:
+    for r in adj.get(stack.pop(), ()):
+        if r not in used and r not in roots:
+            used.add(r); stack.append(r)
+files = sorted(os.path.relpath(f, d) for f in glob.glob(d + "/**/*", recursive=True) if os.path.isfile(f))
+maybe = set(pf.get("maybe_used_files", []))
+issues = [{"file": t["filename"], "key": i["key"], "info": i.get("info", "")}
+          for t in pf.get("tex_files", []) + pf.get("detected_toplevel_files", []) for i in t.get("issues", [])]
+status = pf.get("status") or {}
+print(json.dumps({"status": status.get("key"), "status_info": status.get("info", ""), "roots": roots,
+                  "used": sorted(used),
+                  "not_used": [f for f in files if f not in used and f not in roots and f not in maybe],
+                  "issues": issues}))
+'''
+
+
+def arxiv_preflight(python, stage):
+    """Run arXiv's own parser over the stage; return its verdict or None."""
+    proc = subprocess.run([python, "-c", PREFLIGHT_RUNNER, stage], capture_output=True, text=True)
+    if proc.returncode != 0:
+        last = proc.stderr.strip().splitlines()[-1] if proc.stderr.strip() else "no output"
+        warn("arXiv's parser could not run: " + last[:200])
+        return None
+    return json.loads(proc.stdout)
+
+
+def setup_preflight():
+    venv = os.path.join(TEMPLATE, ".preflight")
+    say(f"installing arXiv's preflight parser into {venv}")
+    if subprocess.run([sys.executable, "-m", "venv", venv]).returncode:
+        fail("could not create the virtualenv")
+        return 1
+    with open(os.path.join(venv, ".gitignore"), "w") as fh:
+        fh.write("*\n")
+    pip = os.path.join(venv, "bin", "pip")
+    if subprocess.run([pip, "install", "-q", "git+https://github.com/arXiv/submission-tools.git#subdirectory=tex2pdf-tools"]).returncode:
+        fail("pip could not install tex2pdf-tools from github.com/arXiv/submission-tools")
+        return 1
+    if not preflight_python():
+        fail("the install finished but tex2pdf_tools.preflight does not import")
+        return 1
+    print("      ok; ./banglab arxiv now runs arXiv's own file check")
+    if not shutil.which("texlua"):
+        warn("texlua is not on PATH; arXiv's parser needs it to resolve file names")
+    if not shutil.which("pdfinfo"):
+        warn("pdfinfo is not on PATH; arXiv's parser skips its check that every .pdf is a real PDF without it")
+    return 0
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("paper", nargs="?")
+    ap.add_argument("--out", help="zip to write (default <paper>/arxiv_submission.zip)")
+    ap.add_argument("--keep", action="store_true", help="keep the scratch tree")
+    ap.add_argument("--no-preflight", action="store_true", help="skip arXiv's own parser even if installed")
+    ap.add_argument("--setup-preflight", action="store_true", help="install arXiv's parser into .preflight/")
+    a = ap.parse_args()
+    if a.setup_preflight:
+        return setup_preflight()
+    if not a.paper:
+        ap.error("paper directory required")
+    paper = os.path.abspath(a.paper)
+    out_zip = os.path.abspath(a.out) if a.out else os.path.join(paper, "arxiv_submission.zip")
+
+    # Preflight ---------------------------------------------------------------
+    say("preflight")
+    if not os.path.isdir(os.path.dirname(out_zip)):
+        fail(f"the directory of --out does not exist: {os.path.dirname(out_zip)}")
+        return finish(None, a)
+    lock_path = os.path.join(paper, "banglab.lock")
+    if not os.path.isfile(lock_path):
+        fail("no banglab.lock: start papers with ./banglab init")
+        return finish(None, a)
+    lock = read(lock_path)
+    version = re.search(r"^version (v\S+)", lock, flags=re.M).group(1)
+    if version_tuple(version) < (2, 0, 0):
+        fail(f"the paper runs template {version}; releases before v2.0.0 include the title-card logos from the class, which arXiv deletes as unused. Run ./banglab update first")
+    for h, rel in re.findall(r"^sha256 ([0-9a-f]+)\s+(\S+)", lock, flags=re.M):
+        p = os.path.join(paper, rel)
+        if not os.path.isfile(p):
+            fail(f"library file {rel} is missing; run ./banglab update")
+        elif sha256(p) != h:
+            fail(f"library file {rel} was edited; the zip ships the release's copy only. Move the change to commands.tex and run ./banglab update --force")
+    main_tex = os.path.join(paper, MAIN + ".tex")
+    if not os.path.isfile(main_tex):
+        fail("no main.tex")
+        return finish(None, a)
+    head = strip_comments("".join(read(main_tex).splitlines(True)[:5]))
+    if not PDFOUTPUT.search(head):
+        fail("\\pdfoutput=1 is not within the first five lines of main.tex; keep the template's second line so arXiv picks pdflatex")
+    if re.search(r"\\date\{\\today\}", strip_comments(read(main_tex))):
+        warn("\\date{\\today}: arXiv rebuilds the PDF, so the date on the card changes; a fixed date is safer")
+    if fails:
+        return finish(None, a)
+    print(f"      template {version}, library files match banglab.lock")
+
+    # Reference build ---------------------------------------------------------
+    work = tempfile.mkdtemp(prefix="banglab-arxiv-")
+    src, stage, verify = (os.path.join(work, d) for d in ("src", "stage", "verify"))
+    say("reference build")
+
+    def ignore(d, names):
+        return {n for n in names if n in NEVER_SHIP_DIRS or n in NEVER_SHIP or n.endswith(BUILD_EXT) or n.endswith(".zip")}
+    shutil.copytree(paper, src, ignore=ignore)
+    compile_full(src)
+    ref_log, ref_pages = check_log(os.path.join(src, MAIN + ".log"), "reference build")
+    if fails:
+        return finish(work, a)
+    bbl = os.path.join(src, MAIN + ".bbl")
+    bibitems = len(re.findall(r"\\bibitem", read(bbl))) if os.path.isfile(bbl) else 0
+    print(f"      {ref_pages} pages, {bibitems} references")
+
+    # Dependencies ------------------------------------------------------------
+    say("files the compile read (TeX recorder)")
+    deps = set()
+    trees = tex_trees()
+    for line in read(os.path.join(src, MAIN + ".fls")).splitlines():
+        if not line.startswith("INPUT "):
+            continue
+        p = line[6:].strip()
+        if os.path.isabs(p):
+            real = os.path.realpath(p)
+            if real.startswith(os.path.realpath(src) + os.sep):
+                p = os.path.relpath(real, os.path.realpath(src))
+            elif any(real.startswith(t + os.sep) for t in trees) or real.startswith("/dev/"):
+                continue
+            else:
+                fail(f"the build read {p}, which is neither in the paper nor in the TeX distribution; arXiv has TeX Live and nothing else, so ship that file with the paper")
+                continue
+        p = os.path.normpath(p)
+        if p.startswith("..") or p.endswith(BUILD_EXT) or p.endswith(".bib"):
+            continue
+        if os.path.basename(p) in NEVER_SHIP - {MAIN + ".bbl"} or not os.path.isfile(os.path.join(src, p)):
+            continue
+        deps.add(p)
+    if os.path.isfile(bbl):
+        deps.add(MAIN + ".bbl")   # written by this build, not taken from the paper
+    if fails:
+        return finish(work, a)
+    for p in sorted(deps):
+        print("      " + p)
+
+    # Stage -------------------------------------------------------------------
+    say("staging")
+    for p in sorted(deps):
+        dst = os.path.join(stage, p)
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
+        shutil.copy2(os.path.join(src, p), dst)
+    staged = sorted(os.path.relpath(os.path.join(r, f), stage) for r, _, fs in os.walk(stage) for f in fs)
+    for p in staged:
+        if any(part.startswith(".") for part in p.split(os.sep)):
+            fail(f"{p}: arXiv deletes files and directories whose name starts with a period")
+        if p.endswith(".bib"):
+            fail(f"{p}: a .bib reached the stage; arXiv uses the shipped main.bbl")
+        if not ARXIV_NAME.fullmatch(p):
+            fail(f"{p}: arXiv accepts only a-z A-Z 0-9 _ + - . , = in file names and rewrites the rest, which breaks the include")
+        if p.endswith(".eps"):
+            fail(f"{p}: pdflatex on arXiv does not convert .eps; ship a PDF or PNG")
+        size = os.path.getsize(os.path.join(stage, p))
+        if size > 10 * 2 ** 20:
+            warn(f"{p} is {size // 2 ** 20} MB")
+    if fails:
+        return finish(work, a)
+    print(f"      {len(staged)} files")
+
+    # The paper's own sources, as staged ---------------------------------------
+    sources = {p: strip_comments(read(os.path.join(stage, p))) for p in staged
+               if p.endswith((".tex", ".sty")) and p != "banglab.cls"}
+    for rel, text in sources.items():
+        if "BL@" in strip_verbatim(text):
+            fail(f"{rel} refers to a class internal (BL@...). A paper never redefines the class; since v2.0.0 the title-card logos are \\includegraphics lines inside \\logos{{...}} in main.tex, so a hook that rewrote the lockup draws wrong without an error")
+    notes = any(re.search(r"\\(TODO|authornote)\{", strip_verbatim(t)) for t in sources.values())
+    notes_off = any(re.search(r"\\notesfalse\b", t) for t in sources.values())
+    if notes and not notes_off:
+        fail("\\TODO or \\authornote appear and \\notesfalse is not set: the notes would print on arXiv. Uncomment \\notesfalse in commands.tex")
+    if fails:
+        return finish(work, a)
+
+    # arXiv's own parser ------------------------------------------------------
+    say("arXiv's file check")
+    python = None if a.no_preflight else preflight_python()
+    if a.no_preflight:
+        print("      arXiv's parser skipped (--no-preflight); only the built-in emulation runs")
+    elif python:
+        if not shutil.which("pdfinfo"):
+            print("      note: pdfinfo is not on PATH, so arXiv's parser skips its check that every .pdf is a real PDF")
+        verdict = arxiv_preflight(python, stage)
+        if verdict:
+            if verdict["status"] != "success":
+                fail(f"arXiv's parser stopped before the file check: {verdict['status_info'] or verdict['status']}")
+            else:
+                if verdict["roots"] != [MAIN + ".tex"]:
+                    fail(f"arXiv's parser detected the top-level files {verdict['roots']}; a submission has main.tex alone")
+                for f in verdict["not_used"]:
+                    if f != MAIN + ".bbl":
+                        fail(f"arXiv's parser marks {f} as not used: it would be pre-selected for deletion at Check Files, and the compile would then fail")
+                bad = [i for i in verdict["issues"] if i["key"] in ("file_not_found", "include_command_with_macro")]
+                for i in bad:
+                    fail(f"arXiv's parser reports {i['key']} in {i['file']}: {i['info']}")
+                if not fails:
+                    print("      arXiv's parser (tex2pdf_tools.preflight): every file reachable from main.tex, no missing-file issue")
+    else:
+        warn("arXiv's own parser is not installed; only the built-in emulation ran. Install it once with ./banglab arxiv --setup-preflight")
+
+    # Built-in emulation of the same rule --------------------------------------
+    gp_all = [m for t in sources.values() for m in GRAPHICSPATH.findall(t)]
+    graphics_dirs = []
+    if len(gp_all) == 1:
+        graphics_dirs = re.findall(r"\{([^}]*)\}", gp_all[0])
+    elif len(gp_all) > 1:
+        warn(f"\\graphicspath occurs {len(gp_all)} times in the paper; arXiv's parser then ignores all of them, so write every graphics path in full")
+
+    def resolve(name, cmd):
+        if cmd in IMAGE_CMDS:
+            exts, dirs = GRAPHIC_EXT, [""] + graphics_dirs
+        elif cmd in TEX_CMDS:
+            exts, dirs = (".tex",), [""]
+        elif cmd in STY_CMDS:
+            exts, dirs = (".sty",), [""]
+        elif cmd in CLS_CMDS:
+            exts, dirs = (".cls",), [""]
+        else:
+            exts, dirs = (), [""]
+        for d in dirs:
+            base = os.path.join(d, name) if d else name
+            for cand in (base,) + tuple(base + e for e in exts):
+                if os.path.isfile(os.path.join(stage, cand)):
+                    return os.path.normpath(cand)
+        return None
+
+    referenced = {}
+    for t in staged:
+        if not t.endswith((".tex", ".sty", ".cls")):
+            continue
+        raw = read(os.path.join(stage, t))
+        text = strip_comments(raw)
+        hits = [(m.group(1), m.group(2)) for m in (REF_IMG if t.endswith(".cls") else REF_ANY).finditer(text)]
+        if not t.endswith(".cls"):
+            hits += [("addplot table", m.group(1)) for m in ADDPLOT.finditer(text)]
+        for cmd, arg in hits:
+            for name in (n.strip() for n in arg.split(",")):
+                if not name or name.startswith("#"):
+                    continue
+                if "\\" in name or "#" in name:
+                    fail(f"{t}: \\{cmd}{{{name}}} reaches a file through a macro; arXiv's parser cannot resolve it and the file counts as unused. Write the literal path")
+                    continue
+                if cmd == "include" and "/" in name:
+                    fail(f"{t}: \\include{{{name}}}: arXiv can write .aux files only in the root directory, so this fails there; use \\input, or move the file to the root")
+                cand = resolve(name, cmd)
+                if cand is None:
+                    if cmd in STY_CMDS + CLS_CMDS:
+                        continue   # a TeX Live package or class, not shipped
+                    fail(f"{t}: \\{cmd}{{{name}}} names a file that is not in the zip")
+                else:
+                    referenced.setdefault(cand, set()).add(t)
+        if t.endswith(".cls"):
+            for m in REF_IMG.finditer(text):
+                fail(f"{t}: the class includes the graphic {m.group(2)} itself; arXiv reads a class only for such lines and finds no file behind a macro")
+        if t.endswith(".tex"):
+            for m in REF_IMG.finditer(comments_only(raw)):
+                if resolve(m.group(2).strip(), m.group(1)) is None:
+                    warn(f"{t}: a commented-out include names {m.group(2).strip()}, which is not shipped; harmless on arXiv, which strips comments")
+    table = dict(re.findall(r"\\definelogo\{([^}]*)\}\{([^}]*)\}\{[^}]*\}", strip_comments(read(os.path.join(stage, "banglab.cls"))))) if "banglab.cls" in staged else {}
+    for p in staged:
+        if p in (MAIN + ".tex", MAIN + ".bbl") or p in referenced:
+            continue
+        fix = ""
+        if p in table.values():
+            fix = ". Write \\logos{" + "".join(f"\\includegraphics{{{v}}}" for v in table.values() if v in staged) + "} in main.tex"
+        fail(f"{p} is read by the compile but no .tex file names it literally, so arXiv marks it unused and deletes it{fix}")
+    if fails:
+        return finish(work, a)
+    print("      built-in check: every shipped file is named by a .tex file, no dangling or macro path")
+
+    # Zip ---------------------------------------------------------------------
+    say("zip")
+    tmp_zip = os.path.join(work, "arxiv_submission.zip")
+    with zipfile.ZipFile(tmp_zip, "w", zipfile.ZIP_DEFLATED) as z:
+        for p in staged:
+            z.write(os.path.join(stage, p), p)
+    size = os.path.getsize(tmp_zip)
+    if size > 50 * 2 ** 20:
+        fail(f"zip is {size // 2 ** 20} MB, over arXiv's limit")
+    print(f"      {size // 1024} KB, {len(staged)} files")
+
+    # Standalone verification -------------------------------------------------
+    say("standalone build of the zip, as arXiv compiles it (no bibtex, no path back)")
+    os.makedirs(verify)
+    with zipfile.ZipFile(tmp_zip) as z:
+        z.extractall(verify)
+    for i in (1, 2):
+        pdflatex(verify, f"verify{i}.out")
+    vlog, vpages = check_log(os.path.join(verify, MAIN + ".log"), "standalone build", expect_pages=ref_pages)
+    flat = vlog.replace("\n", "")
+    for p in staged:
+        if p.endswith(GRAPHIC_EXT) and p not in flat and "./" + p not in flat:
+            fail(f"{p} is in the zip but the standalone build never read it")
+    if fails:
+        return finish(work, a)
+    print(f"      {vpages} pages, same as the reference build; every shipped graphic read")
+
+    # Publish -----------------------------------------------------------------
+    say("publishing")
+    shutil.copy2(tmp_zip, out_zip)
+    print(f"      {out_zip}")
+    print(f"      sha256 {sha256(out_zip)}")
+    print("      upload with TeX Live 2025 (arXiv's default); at Check Files no row should read Not used")
+    return finish(work, a)
+
+
+def finish(work, a):
+    if work and not a.keep:
+        shutil.rmtree(work, ignore_errors=True)
+    elif work:
+        print(f"\n      scratch kept in {work}")
+    if warns:
+        print(f"\n{len(warns)} warning(s)")
+    if fails:
+        print(f"\n{len(fails)} failure(s); no zip written")
+        return 1
+    print("\nok")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

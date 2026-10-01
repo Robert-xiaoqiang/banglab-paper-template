@@ -7,6 +7,10 @@
 #       Print each paper's release, how far it is behind, and any edited library file.
 #   ./banglab update <paper-dir> [--version vX.Y.Z] [--force] [--no-commit]
 #       Replace a paper's library files with another release and commit the change.
+#   ./banglab arxiv  <paper-dir> [--out <zip>] [--keep] [--no-preflight]
+#       Build and verify the paper's arXiv submission zip (see banglab-arxiv).
+#   ./banglab arxiv  --setup-preflight
+#       Install arXiv's own file checker into .preflight/ for ./banglab arxiv to use.
 #
 # banglab-files.txt says which files are library (owned by the template, replaced on
 # update, never edited in a paper) and which are scaffold (copied once, then the
@@ -231,5 +235,6 @@ case ${1:-} in
   init) shift; cmd_init "$@" ;;
   status) shift; cmd_status "$@" ;;
   update) shift; cmd_update "$@" ;;
-  *) sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
+  arxiv) shift; exec python3 "$template/banglab-arxiv" "$@" ;;
+  *) sed -n '2,21p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
 esac

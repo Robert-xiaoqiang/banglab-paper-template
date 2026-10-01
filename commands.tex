@@ -31,6 +31,12 @@
 \newtheorem{definition}{Definition}
 \theoremstyle{remark}
 \newtheorem{remark}{Remark}
+% On arXiv's TeX Live 2025 cleveref names every environment that shares the
+% theorem counter "Theorem". These hooks give each its own name there; they
+% change nothing on a TeX Live where cleveref works.
+\AddToHook{env/lemma/begin}{\crefalias{theorem}{lemma}}
+\AddToHook{env/proposition/begin}{\crefalias{theorem}{proposition}}
+\AddToHook{env/corollary/begin}{\crefalias{theorem}{corollary}}
 
 % Notes to co-authors %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

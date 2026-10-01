@@ -10,7 +10,7 @@ These rules hold for every paper built on `banglab.cls`, for the people writing 
 - `tables/<name>.tex` holds the `tabular` only. The `table` environment, the caption and the label stay in `main.tex`.
 - `references.bib` is the one bibliography. Keys follow `<first author's surname><year><first title word>`, as in `vaswani2017attention`.
 - `commands.tex` holds the packages and macros the paper adds. Never edit the library files (`banglab.cls`, `assets/`, this file) in a paper: `./banglab update` replaces them, and `banglab.lock` records their hashes so an edit is caught. Change their behaviour from `commands.tex`, or propose the change to the template.
-- `assets/` holds the logos and icons the class draws. `\logos{udem,mila,...}` in `main.tex` picks the ones the title card shows. Show only the logos of the institutions the authors belong to.
+- `assets/` holds the logo library. `\logos{...}` in `main.tex` lists the ones the title card shows, each as `\includegraphics{assets/logo-<name>.pdf}` (`.png` for Polytechnique) with the path exactly as the README's Logos table writes it, because arXiv deletes a graphics file no `.tex` file names. Never reach a graphics file through a macro, in the card or anywhere else. Show only the logos of the institutions the authors belong to.
 - File names are lowercase words joined by hyphens and say what the file holds, never a number or a version (`main-results.tex`, not `table2.tex` or `results-v2.tex`).
 
 ## Labels and cross-references
@@ -61,4 +61,4 @@ These rules hold for every paper built on `banglab.cls`, for the people writing 
 
 - pdfLaTeX through `latexmk -pdf main.tex`, which is what Overleaf runs. Keep the `\pdfoutput=1` line at the top of `main.tex`.
 - A change is done when the build has no `^! ` lines and no undefined references or citations in `main.log`.
-- For arXiv, upload the generated `main.bbl` with the sources.
+- For arXiv, build the zip with `./banglab arxiv <paper>` from a clone of the template repository, which ships `main.bbl` and runs arXiv's file check. Fix every FAIL it prints before uploading, and upload with TeX Live 2025.
